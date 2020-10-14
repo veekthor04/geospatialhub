@@ -3,6 +3,7 @@ from rest_framework import generics, permissions, viewsets
 from rest_framework import viewsets
 from .permissions import IsAuthorOrReadOnly
 from .serializers import UserSerializer
+from .models import Profile
 
 # class UserList(generics.ListAPIView):
 

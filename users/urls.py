@@ -6,4 +6,8 @@ router = SimpleRouter()
 
 router.register('', UserViewSet, basename='users')
 
-urlpatterns = router.urls
+urlpatterns = [
+
+]
+
+urlpatterns += router.urls
