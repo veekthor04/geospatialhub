@@ -8,6 +8,7 @@ class Profile(models.Model):
     first_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100, blank=True)
     phone = models.IntegerField(blank=True, null=True)
+    profile_pic = models.ImageField(upload_to='profile_pic/%Y/%m/%d/', max_length=255, null=True, blank=True)
     bio = models.TextField(blank=True)
     date_of_birth = models.DateField(blank=True, null=True)
     location_city = models.CharField(max_length=50, blank=True)
@@ -27,3 +28,4 @@ def create_user_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
+

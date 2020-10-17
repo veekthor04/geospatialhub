@@ -56,6 +56,7 @@ INSTALLED_APPS = [
 
     # Local
     'users.apps.UsersConfig',
+    'learning.apps.LearningConfig',
 ]
 
 REST_FRAMEWORK = {
@@ -73,6 +74,11 @@ SWAGGER_SETTINGS = {
     'LOGIN_URL': 'rest_framework:login',
     'LOGOUT_URL': 'rest_framework:logout',
 }
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'users.backends.EmailModelBackend'
+]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
