@@ -27,6 +27,7 @@ class Module(models.Model):
     description = models.TextField()
     note = models.TextField()
     video_url = models.URLField(null=True, blank=True)
+    is_free_status = models.BooleanField(default=False)
     
     def __str__(self):
         

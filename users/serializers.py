@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_auth.serializers import TokenSerializer
 from .models import Profile
 
 
@@ -40,3 +41,12 @@ class UserSerializer(serializers.ModelSerializer):
         profile.save()
 
         return instance
+
+class CustomTokenSerializer(serializers.ModelSerializer):
+
+    user = UserSerializer(read_only=True)
+
+    class Meta(TokenSerializer.Meta):
+        fields = ('key', 'user') 
+
+    

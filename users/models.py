@@ -15,6 +15,7 @@ class Profile(models.Model):
     location_state = models.CharField(max_length=50, blank=True)
     location_country = models.CharField(max_length=50, blank=True)
     company = models.CharField(max_length=50, blank=True)
+    is_subscribed = models.BooleanField(default=False)
     def __str__(self):
         return self.user.username
 
