@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'cloudinary_storage',
     'cloudinary',
     'django.contrib.sites', 
+    'django_cleanup.apps.CleanupConfig',
 
     # 3rd party
     'rest_framework',
@@ -54,8 +55,8 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'rest_auth', 
-    'rest_auth.registration', 
+    'rest_auth',
+    'rest_auth.registration',
     'corsheaders',
 
     # Local
