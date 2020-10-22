@@ -4,17 +4,22 @@ from .models import Course, Module
 
 class CourseSerializer(serializers.ModelSerializer):
 
+    module_count = serializers.SerializerMethodField()
+
+    def get_module_count(self, course):
+        return course.modules.count()
+
     class Meta:
 
         model = Course
-        fields = ('id', 'author', 'title', 'course_pic', 'overview', 'estimated_time', 'created')
+        fields = ('id', 'author', 'title', 'course_pic', 'overview', 'estimated_time', 'created', 'module_count')
 
 class ModuleSerializer(serializers.ModelSerializer):
 
     class Meta:
 
         model = Module
-        fields = ('id', 'title', 'description', 'note', 'video_url')
+        fields = ('id', 'title', 'description', 'note', 'video_url', 'pdf_file')
 
 class SingleCourseSerializer(serializers.ModelSerializer):
 
