@@ -31,7 +31,7 @@ MEDIA_URL = '/media/'
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-ALLOWED_HOSTS = ['geospatialhub.herokuapp.com','localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['geospatialhub.herokuapp.com', 'geospatialhub.netlify.app', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -104,6 +104,7 @@ MIDDLEWARE = [
 CORS_ORIGIN_WHITELIST = (
     'http://localhost:3000',
     'http://localhost:8000',
+    'https://geospatialhub.netlify.app',
 )
 
 ROOT_URLCONF = 'geospatialhub.urls'

@@ -45,3 +45,14 @@ class Module(models.Model):
 #     def __str__(self):
         
 #         return self.title
+
+class CourseChat(models.Model):
+
+    author = models.ForeignKey(User, related_name='coursechats', on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, related_name='coursechats', on_delete=models.CASCADE)
+    body = models.TextField()
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+
+        return self.id

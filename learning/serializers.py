@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course, Module
+from .models import Course, Module, CourseChat
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -14,6 +14,7 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = ('id', 'author', 'title', 'course_pic', 'overview', 'estimated_time', 'created', 'module_count')
 
+
 class ModuleSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -21,14 +22,26 @@ class ModuleSerializer(serializers.ModelSerializer):
         model = Module
         fields = ('id', 'title', 'description', 'note', 'video_url', 'pdf_file')
 
+
+class CourseChatSerializer(serializers.ModelSerializer):
+
+    username = serializers.CharField(source='author.username', read_only=True)
+
+    class Meta:
+        
+        model = CourseChat
+        fields = ('author', 'username', 'body', 'created')
+
+
 class SingleCourseSerializer(serializers.ModelSerializer):
 
     modules = ModuleSerializer(many=True, read_only=True)
+    coursechats = CourseChatSerializer(many=True, read_only=True)
 
     class Meta:
 
         model = Course
-        fields = ('id', 'author', 'title', 'course_pic', 'overview', 'estimated_time', 'created','modules')
+        fields = ('id', 'author', 'title', 'course_pic', 'overview', 'estimated_time', 'created','modules', 'coursechats')
 
 class FreeSingleCourseSerializer(serializers.ModelSerializer):
 
