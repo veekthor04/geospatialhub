@@ -6,10 +6,12 @@ from .models import Profile
 
 class ProfileSerializer(serializers.ModelSerializer):
 
+    enrolled_for = serializers.ListField(source='get_enrolled_for')
+
     class Meta:
 
         model = Profile
-        fields = ('id', 'first_name', 'last_name','phone', 'profile_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','company' , )
+        fields = ('id', 'first_name', 'last_name','phone', 'profile_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','company' ,'enrolled_for' )
 
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()

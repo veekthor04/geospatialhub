@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from learning.models import Course
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -16,6 +17,14 @@ class Profile(models.Model):
     location_country = models.CharField(max_length=50, blank=True)
     company = models.CharField(max_length=50, blank=True)
     is_subscribed = models.BooleanField(default=False)
+
+    def get_enrolled_for(self):
+        course_list = Course.objects.filter(enrolled_for=self.pk)
+        course_enrolled = []
+        for course in course_list:
+            course_enrolled.append({"id": course.id, "title": course.title})
+        return course_enrolled
+
     def __str__(self):
         return self.user.username
 

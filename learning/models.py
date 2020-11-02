@@ -13,6 +13,7 @@ class Course(models.Model):
     overview = models.TextField()
     estimated_time = models.IntegerField(help_text="Should be in minutes")
     created = models.DateTimeField(auto_now_add=True)
+    enrolled_for = models.ManyToManyField(User, related_name='enrolled_for')
     
     class Meta:
     

@@ -2,8 +2,9 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import Course, Module, CourseChat
+from users.models import Profile
 from .serializers import CourseSerializer, SingleCourseSerializer, FreeSingleCourseSerializer, CourseChatSerializer
-import json
+
 
 # Create your views here.
 class ListCourse(generics.ListAPIView):
@@ -24,24 +25,22 @@ def DetailCourse(request,pk):
         
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    if request.method == 'POST':
+    user = request.user
+    body = request.data['body']
+    enroll = request.data['enroll']
+    
+    if body:
+    
+        course_chat = CourseChat.objects.create( author=user, course=course, body=body)
+        course_chat.save()
 
-        post = json.loads(request.body)
-        user = request.user
+    if enroll == True:
+            
+        course.enrolled_for.add(user)
 
-        try:
-            message = CourseChat.objects.create(
-                author=user,
-                course=course,
-                body=post["body"],
-            )
-            serializer = CourseChatSerializer(message)
-
-        except Exception:
-
-            return Response(status=status.HTTP_404_NOT_FOUND)
     if request.user.profile.is_subscribed:
         serializer = SingleCourseSerializer(course, context={'request': request})
+        print(Profile.objects.get(user=user).get_enrolled_for)
     else:
         serializer = FreeSingleCourseSerializer(course, context={'request': request})
 

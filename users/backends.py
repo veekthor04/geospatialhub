@@ -19,7 +19,8 @@ class EmailModelBackend(ModelBackend):
             user = User.objects.get(**kwargs)
 
         except User.DoesNotExist:
-            User.set_password(password)
+            # User.set_password(password)
+            return None
 
         else:
             if user.check_password(password) and self.user_can_authenticate(user):
