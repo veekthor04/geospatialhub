@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import Course, Module, CourseChat
+from .models import Course, Module, CourseChat, Category
 from users.models import Profile
 from .serializers import CourseSerializer, SingleCourseSerializer, FreeSingleCourseSerializer, CourseChatSerializer
 
@@ -11,6 +11,20 @@ class ListCourse(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        response_list = serializer.data 
+
+        category_list =  Category.objects.all()
+
+        all_categories = []
+        for category in category_list:
+            all_categories.append({"id": category.id, "title": category.title})
+
+        data = { 'all_courses' : response_list, 'all_categories' : all_categories }
+        return Response(data=data)
 
 # class DetailCourse(generics.RetrieveAPIView):
 #     queryset = Course.objects.all()
@@ -40,7 +54,7 @@ def DetailCourse(request,pk):
 
     if request.user.profile.is_subscribed:
         serializer = SingleCourseSerializer(course, context={'request': request})
-        print(Profile.objects.get(user=user).get_enrolled_for)
+        print(Profile.objects.get(user=user).get_enrolled_for())
     else:
         serializer = FreeSingleCourseSerializer(course, context={'request': request})
 
