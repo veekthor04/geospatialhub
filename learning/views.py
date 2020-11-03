@@ -78,7 +78,7 @@ def DetailCourse(request,pk):
 
     if request.user.profile.is_subscribed:
         serializer = SingleCourseSerializer(course)
-        print(Profile.objects.get(user=user).get_enrolled_for())
+        # print(Profile.objects.get(user=user).get_enrolled_for())
     else:
         serializer = FreeSingleCourseSerializer(course)
 
