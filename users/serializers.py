@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_auth.serializers import TokenSerializer
-from .models import Profile
+from .models import Profile, Post, PostRate, Follower
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -51,4 +51,33 @@ class CustomTokenSerializer(serializers.ModelSerializer):
     class Meta(TokenSerializer.Meta):
         fields = ('key', 'user') 
 
-    
+
+class PostSerializer(serializers.ModelSerializer):
+    post_belongs_to_authenticated_user = serializers.BooleanField(source = 'get_post_belongs_to_authenticated_user', read_only = True)
+    posted_by = serializers.DictField(child = serializers.CharField(), source = 'get_user', read_only = True)
+    pub_date = serializers.CharField(source = 'get_readable_date', read_only = True)
+
+    likes_count = serializers.IntegerField(source='get_likes_count', read_only = True)
+    dislikes_count = serializers.IntegerField(source='get_dislikes_count', read_only = True)
+    comments_count = serializers.IntegerField(source='get_comments_count', read_only = True)
+
+    class Meta:
+        model = Post
+        fields = ['id', 'post_belongs_to_authenticated_user', 'posted_by', 'pub_date', 'text', 'image', 'in_reply_to_post', 'likes_count', 'dislikes_count', 'comments_count']
+        write_only_fields = ['text', 'image', 'in_reply_to_post']
+        
+class PostRateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PostRate
+        fields = ['liked', 'rated_post']
+
+
+class FollowerSerializer(serializers.ModelSerializer):
+    user = serializers.DictField(child = serializers.CharField(), source = 'get_user_info', read_only = True)
+    is_followed_by = serializers.DictField(child = serializers.CharField(), source = 'get_is_followed_by_info', read_only = True)
+
+    class Meta:
+        model = Follower
+        fields = ('user', 'is_followed_by')
+        read_only_fields = ('user', 'is_followed_by')

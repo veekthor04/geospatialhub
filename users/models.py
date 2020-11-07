@@ -4,7 +4,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from learning.models import Course
 from django_currentuser.db.models import CurrentUserField
-from django_currentuser.middleware import get_current_authenticated_user
+# from django_currentuser.middleware import get_current_authenticated_user
+from django_currentuser.middleware import get_current_user, get_current_authenticated_user
+
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -53,10 +55,12 @@ class Post(models.Model):
 
     def get_post_belongs_to_authenticated_user(self):
         return self.posted_by.pk == get_current_authenticated_user().pk
+        # return True
+
 
     def get_user(self):
-        user_dict = vars(self.posted_by)
-        return {"id": user_dict["id"], "username": user_dict["username"]}
+        # user_dict = vars(self.posted_by)
+        return {"id": self.posted_by.id, "username": self.posted_by.username}
 
     def get_likes_count(self):
         return PostRate.objects.filter(liked=True, rated_post=self).count()
@@ -80,3 +84,29 @@ class PostRate(models.Model):
     
     def __str__(self):
         return str(self.rated_post)
+
+
+class Follower(models.Model): #rename model to UserFollows or find a better name
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
+    is_followed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='is_followed_by')
+
+    def get_user_info(self):
+        return {"id": self.user.id, "username": self.user.username}
+
+    def get_is_followed_by_info(self):
+        return {"id": self.is_followed_by.id, "username": self.is_followed_by.username}
+        
+    def get_following(self, user):
+        return Follower.objects.filter(is_followed_by=user)
+
+    def get_followers(self, user):
+        return Follower.objects.filter(user=user).exclude(is_followed_by=user)
+
+    def get_following_count(self, user):
+        return Follower.objects.filter(is_followed_by=user).count()
+
+    def get_followers_count(self, user):
+        return Follower.objects.filter(user=user).count()
+        
+    def __str__(self):
+        return str(self)
