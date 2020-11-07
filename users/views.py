@@ -56,7 +56,7 @@ class PostViewSet(viewsets.ModelViewSet):
             return Post.objects.filter(in_reply_to_post = None).order_by('-pub_date')
         return Post.objects.order_by('-pub_date')
 
-class PostRateViewSet(generics.GenericAPIView): # use mixins instead
+class PostRateViewSet(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
     queryset = PostRate.objects.all()
     serializer_class = PostRateSerializer
@@ -97,17 +97,29 @@ class PostRateViewSet(generics.GenericAPIView): # use mixins instead
         }
         return  Response(data)
 
-class CommentList(generics.ListAPIView): # turn this into a method in postviewset
+class CommentList(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = PostSerializer
     
     def get_queryset(self):
         return Post.objects.filter(in_reply_to_post = self.kwargs["pk"])
 
+# @login_required
+def Follow(request, pk):
+    user = get_object_or_404(User, pk = pk)
+    already_followed = Follower.objects.filter(user = user, is_followed_by = request.user).first()
+    if not already_followed:
+        new_follower = Follower(user = user, is_followed_by = request.user)
+        new_follower.save()
+        follower_count = Follower.objects.filter(user = user).count()
+        return Response({'status': 'Following', 'count': follower_count})
+    else:
+        already_followed.delete()
+        follower_count = Follower.objects.filter(user = user).count()
+        return Response({'status': 'Not following', 'count': follower_count})
 
 class Following(generics.ListCreateAPIView):
     serializer_class = FollowerSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = get_object_or_404(User, pk = self.kwargs["pk"])
@@ -117,7 +129,6 @@ class Following(generics.ListCreateAPIView):
 class Followers(generics.ListCreateAPIView):
     queryset = Follower.objects.all()
     serializer_class = FollowerSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = get_object_or_404(User, pk = self.kwargs["pk"])

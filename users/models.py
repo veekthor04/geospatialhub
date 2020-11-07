@@ -86,7 +86,7 @@ class PostRate(models.Model):
         return str(self.rated_post)
 
 
-class Follower(models.Model): #rename model to UserFollows or find a better name
+class Follower(models.Model): 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
     is_followed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='is_followed_by')
 
