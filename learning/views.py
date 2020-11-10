@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import Course, Module, CourseChat, Category
 from users.models import Profile
-from .serializers import CourseSerializer, SingleCourseSerializer, FreeSingleCourseSerializer, CourseChatSerializer
+from .serializers import CourseSerializer, SingleCourseSerializer, FreeSingleCourseSerializer, CourseChatSerializer, CourseChatSerializer
 from django_currentuser.middleware import get_current_authenticated_user
 
 
@@ -62,25 +62,48 @@ def DetailCourse(request,pk):
     except Course.DoesNotExist:
         
         return Response(status=status.HTTP_404_NOT_FOUND)
-
-    user = request.user
-    body = request.data['body']
-    enroll = request.data['enroll']
     
-    if body:
-    
-        course_chat = CourseChat.objects.create( author=user, course=course, body=body)
-        course_chat.save()
+    if request.method == 'POST':
 
-    if enroll == True:
-            
-        course.enrolled_for.add(user)
+        user = request.user
+        enroll = request.data['enroll']
+        if enroll == True:
+                
+            course.enrolled_for.add(user)
+        
+        elif enroll == False:
+                
+            course.enrolled_for.remove(user)
+        
 
     if request.user.profile.is_subscribed:
         serializer = SingleCourseSerializer(course)
-        # print(Profile.objects.get(user=user).get_enrolled_for())
+
     else:
         serializer = FreeSingleCourseSerializer(course)
+
+    return Response(serializer.data)
+    
+
+@api_view(['GET','POST'])
+def CourseChats(request,pk):
+
+    try:
+        course_chats = CourseChat.objects.filter(course=pk)
+    except CourseChat.DoesNotExist:
+        
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'POST':
+
+        user = request.user
+        text = request.data['text']
+
+    
+        course_chat = CourseChat.objects.create( author=user, course=Course.objects.get(pk=pk), body=text)
+        course_chat.save()
+
+    serializer = CourseChatSerializer(course_chats, many=True)
 
     return Response(serializer.data)
     

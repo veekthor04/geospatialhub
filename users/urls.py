@@ -12,9 +12,9 @@ urlpatterns = [
     path('post/rate/<int:pk>/', PostRateViewSet.as_view(), name='rate'),
     path('post/retrieve-comments/<int:pk>/', CommentList.as_view(), name='retrieve-comments'),
 
-    path('api/follow/<int:pk>/', Follow, name='follow'),
-    path('api/following/<int:pk>/', Following.as_view(), name='following'),
-    path('api/followers/<int:pk>/', Followers.as_view(), name='followers'),
+    path('follow/<int:pk>/', Follow, name='follow'),
+    path('following/<int:pk>/', Following.as_view(), name='following'),
+    path('followers/<int:pk>/', Followers.as_view(), name='followers'),
 
 ]
 

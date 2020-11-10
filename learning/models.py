@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from cloudinary_storage.storage import RawMediaCloudinaryStorage
+from django_currentuser.db.models import CurrentUserField
+from django_currentuser.middleware import get_current_user, get_current_authenticated_user
 
 
 # Create your models here.
@@ -35,6 +37,9 @@ class Course(models.Model):
 
     def get_category(self):
         return {"id": self.category.id, "title": self.category.title}
+
+    def get_is_user_enrolled(self):
+        return self.enrolled_for.filter(id=get_current_authenticated_user().pk).exists()
     
     def __str__(self):
     
@@ -62,6 +67,10 @@ class CourseChat(models.Model):
     course = models.ForeignKey(Course, related_name='coursechats', on_delete=models.CASCADE)
     body = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+    
+        ordering = ['-created']
 
     def __str__(self):
 

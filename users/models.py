@@ -4,7 +4,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from learning.models import Course
 from django_currentuser.db.models import CurrentUserField
-# from django_currentuser.middleware import get_current_authenticated_user
 from django_currentuser.middleware import get_current_user, get_current_authenticated_user
 
 
@@ -21,6 +20,16 @@ class Profile(models.Model):
     location_country = models.CharField(max_length=50, blank=True)
     company = models.CharField(max_length=50, blank=True)
     is_subscribed = models.BooleanField(default=False)
+
+    def get_followers_count(self):
+        return Follower.objects.filter(user = self.user).exclude(is_followed_by = self.user).count()
+
+    def get_following_count(self):
+        return Follower.objects.filter(is_followed_by = self.user).count()
+
+    def get_follow_status(self):
+        follow_status = Follower.objects.filter(user = self.user, is_followed_by = get_current_authenticated_user())
+        return "Following" if follow_status else "Follow"
 
     def get_enrolled_for(self):
         course_list = Course.objects.filter(enrolled_for=self.pk)
@@ -50,9 +59,6 @@ class Post(models.Model):
     image = models.ImageField(upload_to='post-images', null=True)
     in_reply_to_post = models.IntegerField(null=True)
 
-    def get_readable_date(self):
-        return self.pub_date.strftime("%B %d, %Y")
-
     def get_post_belongs_to_authenticated_user(self):
         return self.posted_by.pk == get_current_authenticated_user().pk
         # return True
@@ -64,9 +70,6 @@ class Post(models.Model):
 
     def get_likes_count(self):
         return PostRate.objects.filter(liked=True, rated_post=self).count()
-
-    def get_dislikes_count(self):
-        return PostRate.objects.filter(liked=False, rated_post=self).count()
 
     def get_comments(self):
         return Post.objects.filter(in_reply_to_post=self.pk)

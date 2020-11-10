@@ -38,8 +38,9 @@ class CourseChatSerializer(serializers.ModelSerializer):
 class SingleCourseSerializer(serializers.ModelSerializer):
 
     modules = ModuleSerializer(many=True, read_only=True)
-    coursechats = CourseChatSerializer(many=True, read_only=True)
+    # coursechats = CourseChatSerializer(many=True, read_only=True)
     category = serializers.DictField(child = serializers.CharField(),source='get_category')
+    is_enrolled = serializers.BooleanField(source = 'get_is_user_enrolled', read_only = True)
     module_count = serializers.SerializerMethodField()
 
     def get_module_count(self, course):
@@ -48,7 +49,7 @@ class SingleCourseSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = Course
-        fields = ('id', 'author', 'category', 'title', 'course_pic', 'overview', 'estimated_time', 'created','module_count','modules', 'coursechats')
+        fields = ('id', 'author', 'category', 'title', 'course_pic', 'overview', 'estimated_time', 'created','module_count','modules','is_enrolled')
 
 class FreeSingleCourseSerializer(serializers.ModelSerializer):
 

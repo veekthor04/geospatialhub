@@ -5,13 +5,15 @@ from .models import Profile, Post, PostRate, Follower
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-
+    followers_count = serializers.IntegerField(source = 'get_followers_count')
+    following_count = serializers.IntegerField(source = 'get_following_count')
+    follow_status = serializers.CharField(source = 'get_follow_status')
     enrolled_for = serializers.ListField(source='get_enrolled_for')
 
     class Meta:
 
         model = Profile
-        fields = ('id', 'first_name', 'last_name','phone', 'profile_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','company' ,'enrolled_for' )
+        fields = ('id', 'first_name', 'last_name','phone', 'profile_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','company' , 'followers_count', 'following_count', 'follow_status', 'enrolled_for' )
 
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()
@@ -55,15 +57,12 @@ class CustomTokenSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     post_belongs_to_authenticated_user = serializers.BooleanField(source = 'get_post_belongs_to_authenticated_user', read_only = True)
     posted_by = serializers.DictField(child = serializers.CharField(), source = 'get_user', read_only = True)
-    pub_date = serializers.CharField(source = 'get_readable_date', read_only = True)
-
     likes_count = serializers.IntegerField(source='get_likes_count', read_only = True)
-    dislikes_count = serializers.IntegerField(source='get_dislikes_count', read_only = True)
     comments_count = serializers.IntegerField(source='get_comments_count', read_only = True)
 
     class Meta:
         model = Post
-        fields = ['id', 'post_belongs_to_authenticated_user', 'posted_by', 'pub_date', 'text', 'image', 'in_reply_to_post', 'likes_count', 'dislikes_count', 'comments_count']
+        fields = ['id', 'post_belongs_to_authenticated_user', 'posted_by', 'pub_date', 'text', 'image', 'in_reply_to_post', 'likes_count', 'comments_count']
         write_only_fields = ['text', 'image', 'in_reply_to_post']
         
 class PostRateSerializer(serializers.ModelSerializer):
