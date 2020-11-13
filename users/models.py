@@ -31,6 +31,9 @@ class Profile(models.Model):
         follow_status = Follower.objects.filter(user = self.user, is_followed_by = get_current_authenticated_user())
         return "Following" if follow_status else "Follow"
 
+    def get_unread_count(self):
+        return  Message.objects.filter(receiver=self.user,is_read=False).count()
+
     def get_enrolled_for(self):
         course_list = Course.objects.filter(enrolled_for=self.pk)
         course_enrolled = []
@@ -120,6 +123,7 @@ class Message(models.Model):
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='receiver')
     text = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
 
     
     def get_sender(self):

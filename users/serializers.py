@@ -5,15 +5,16 @@ from .models import Profile, Post, PostRate, Follower, Message
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    followers_count = serializers.IntegerField(source = 'get_followers_count')
-    following_count = serializers.IntegerField(source = 'get_following_count')
-    follow_status = serializers.CharField(source = 'get_follow_status')
+    followers_count = serializers.IntegerField(source='get_followers_count')
+    following_count = serializers.IntegerField(source='get_following_count')
+    follow_status = serializers.CharField(source='get_follow_status')
     enrolled_for = serializers.ListField(source='get_enrolled_for')
+    unread_count = serializers.IntegerField(source='get_unread_count')
 
     class Meta:
 
         model = Profile
-        fields = ('id', 'first_name', 'last_name','phone', 'profile_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','company' , 'followers_count', 'following_count', 'follow_status', 'enrolled_for' )
+        fields = ('id', 'first_name', 'last_name','phone', 'profile_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','company' , 'followers_count', 'following_count', 'follow_status', 'unread_count', 'enrolled_for' )
 
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()
@@ -88,5 +89,5 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ['sender', 'text', 'receiver', 'created']
+        fields = ['sender', 'text', 'receiver', 'created', 'is_read']
         write_only_fields = ['text', 'receiver']

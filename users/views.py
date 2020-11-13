@@ -165,6 +165,11 @@ def SingleMessage(request,pk):
     
     messages = Message.objects.filter(Q(sender__in= [user,user_pal]) & Q(receiver__in= [user,user_pal]))
 
+    for message in messages:
+        if message.receiver==user:
+            message.is_read = True
+            message.save()
+
     serializer = MessageSerializer(messages, many=True)
 
     return Response(serializer.data)
