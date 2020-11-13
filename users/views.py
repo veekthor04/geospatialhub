@@ -6,8 +6,9 @@ from rest_framework.parsers import JSONParser,FormParser, MultiPartParser
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from .permissions import IsAuthorOrReadOnly, IsPostOwner
-from .serializers import UserSerializer, ProfileSerializer, PostSerializer, PostRateSerializer, FollowerSerializer
-from .models import Profile, Post, PostRate, Follower
+from .serializers import UserSerializer, ProfileSerializer, PostSerializer, PostRateSerializer, FollowerSerializer, MessageSerializer
+from .models import Profile, Post, PostRate, Follower, Message
+from django.db.models import Q
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -33,7 +34,8 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     queryset = Post.objects.all()
     permission_classes = [permissions.IsAuthenticated, IsPostOwner]
-
+    parser_classes = (JSONParser, FormParser, MultiPartParser)
+    
     @action(detail=False, methods=['GET'], name='Get comments')
     def list_comments(self, request, *args, **kwargs):
         queryset = Post.objects.filter(in_reply_to_post = self.kwargs["pk"])
@@ -116,3 +118,53 @@ class Followers(generics.ListCreateAPIView):
     def get_queryset(self):
         user = get_object_or_404(get_user_model(), pk = self.kwargs["pk"])
         return Follower.objects.filter(user = user).exclude(is_followed_by = user)
+
+class MessageViewSet(viewsets.ModelViewSet):
+    
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = MessageSerializer
+
+    def get_queryset(self):
+        return Message.objects.filter(sender=self.request.user)
+
+@api_view(['GET'])
+def MessagesList(request):
+    user = request.user
+    messages = Message.objects.filter(Q(sender=user) | Q(receiver=user))
+    messages_pal = []
+    messages_array = []
+
+    for message in messages:
+        if message.sender==user and message.receiver not in messages_pal:
+            messages_pal.append(message.receiver)
+            messages_array.append(message)
+        elif message.receiver==user and message.sender not in messages_pal:
+            messages_pal.append(message.sender)
+            messages_array.append(message)
+
+    serializer = MessageSerializer(messages_array, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET','POST'])
+def SingleMessage(request,pk):
+
+    try:
+        user_pal = get_user_model().objects.get(pk=pk)
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    user = request.user
+
+    if request.method == 'POST':
+
+        text = request.data['text']
+
+    
+        message = Message.objects.create( sender=user, receiver=user_pal, text=text)
+        message.save()
+    
+    messages = Message.objects.filter(Q(sender__in= [user,user_pal]) & Q(receiver__in= [user,user_pal]))
+
+    serializer = MessageSerializer(messages, many=True)
+
+    return Response(serializer.data)

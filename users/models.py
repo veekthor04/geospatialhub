@@ -114,16 +114,22 @@ class Follower(models.Model):
     def __str__(self):
         return str(self)
 
+
 class Message(models.Model):
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sender')
+    sender = CurrentUserField(related_name='sender')
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='receiver')
-    body = models.TextField()
+    text = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
     
+    def get_sender(self):
+        return {"id": self.sender.id, "username": self.sender.username}
+
+    def get_receiver(self):
+        return {"id": self.receiver.id, "username": self.receiver.username}
+    
+    class Meta:
         ordering = ['-created']
 
     def __str__(self):
-
         return self.id

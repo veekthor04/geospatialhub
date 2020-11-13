@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_auth.serializers import TokenSerializer
-from .models import Profile, Post, PostRate, Follower
+from .models import Profile, Post, PostRate, Follower, Message
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -80,3 +80,13 @@ class FollowerSerializer(serializers.ModelSerializer):
         model = Follower
         fields = ('user', 'is_followed_by')
         read_only_fields = ('user', 'is_followed_by')
+
+class MessageSerializer(serializers.ModelSerializer):
+    sender = serializers.DictField(child = serializers.CharField(), source = 'get_sender', read_only = True)
+    receiver = serializers.DictField(child = serializers.CharField(), source = 'get_receiver', read_only = True)
+
+
+    class Meta:
+        model = Message
+        fields = ['sender', 'text', 'receiver', 'created']
+        write_only_fields = ['text', 'receiver']

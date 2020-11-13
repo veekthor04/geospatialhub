@@ -90,7 +90,7 @@ def CourseChats(request,pk):
 
     try:
         course_chats = CourseChat.objects.filter(course=pk)
-    except CourseChat.DoesNotExist:
+    except:
         
         return Response(status=status.HTTP_404_NOT_FOUND)
 
