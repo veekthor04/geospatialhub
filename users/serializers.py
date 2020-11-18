@@ -14,7 +14,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = Profile
-        fields = ('id', 'first_name', 'last_name','phone', 'profile_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','company' , 'followers_count', 'following_count', 'follow_status', 'unread_count', 'enrolled_for' )
+        fields = ('id', 'first_name', 'last_name','phone', 'profile_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','organisation', 'institution', 'occupation' ,'followers_count', 'following_count', 'follow_status', 'unread_count', 'enrolled_for' )
 
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()

@@ -5,6 +5,10 @@ from .models import Course, Module, CourseChat, Category
 from users.models import Profile
 from .serializers import CourseSerializer, SingleCourseSerializer, FreeSingleCourseSerializer, CourseChatSerializer, CourseChatSerializer
 from django_currentuser.middleware import get_current_authenticated_user
+from random import choice
+from string import digits, ascii_letters
+from decouple import config
+import requests
 
 
 # Create your views here.
@@ -76,7 +80,7 @@ def DetailCourse(request,pk):
             course.enrolled_for.remove(user)
         
 
-    if request.user.profile.is_subscribed:
+    if course.enrolled_for.filter(id=request.user.pk).exists():
         serializer = SingleCourseSerializer(course)
 
     else:
@@ -106,4 +110,45 @@ def CourseChats(request,pk):
     serializer = CourseChatSerializer(course_chats, many=True)
 
     return Response(serializer.data)
+    
+
+@api_view(['GET','POST'])
+def Payment(request,pk):
+    try:
+        course = Course.objects.get(pk=pk)
+    except Course.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    user = request.user
+    secret_key = config('PAYSTACK_SECRET_KEY',cast=str)
+    headers = {'Authorization':secret_key}
+
+    if request.method == 'POST':
+
+        reference = request.data['reference']
+
+        url = 'https://api.paystack.co/transaction/verify/' + reference
+
+        r = requests.get    (url, headers=headers)
+
+        print(r.status_code)
+        print(r.json())
+
+        if r.json()['data']['status'] == 'success':
+            course.enrolled_for.add(user)
+
+
+        return Response({'status':r.json()['data']['status']})
+
+    reference = ''.join([choice(ascii_letters + digits) for n in range(16)])
+    amount = 20000
+    email = user.email
+    data = {'reference':reference,'amount':amount, 'email':email }
+    url = 'https://api.paystack.co/transaction/initialize'
+
+    r = requests.post(url, headers=headers, data=data)
+
+    print(r.json()['data'])
+
+    return Response(r.json()['data'])
     

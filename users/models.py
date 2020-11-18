@@ -13,13 +13,15 @@ class Profile(models.Model):
     last_name = models.CharField(max_length=100, blank=True)
     phone = models.IntegerField(blank=True, null=True)
     profile_pic = models.ImageField(upload_to='geospatialhub/profile_pic/', max_length=255, null=True, blank=True)
+    gender = models.CharField(max_length=50, blank=True)
     bio = models.TextField(blank=True)
     date_of_birth = models.DateField(blank=True, null=True)
     location_city = models.CharField(max_length=50, blank=True)
     location_state = models.CharField(max_length=50, blank=True)
     location_country = models.CharField(max_length=50, blank=True)
-    company = models.CharField(max_length=50, blank=True)
-    is_subscribed = models.BooleanField(default=False)
+    organisation = models.CharField(max_length=200, blank=True)
+    occupation = models.CharField(max_length=200, blank=True)
+    institution = models.CharField(max_length=200, blank=True)
 
     def get_followers_count(self):
         return Follower.objects.filter(user = self.user).exclude(is_followed_by = self.user).count()
