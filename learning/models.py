@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from cloudinary_storage.storage import RawMediaCloudinaryStorage
 from django_currentuser.db.models import CurrentUserField
 from django_currentuser.middleware import get_current_user, get_current_authenticated_user
-
+import users.models
 
 # Create your models here.
 class Category(models.Model):
@@ -27,13 +27,19 @@ class Course(models.Model):
     slug = models.SlugField(max_length=200, unique=True)
     course_pic = models.ImageField(upload_to='geospatialhub/course_pic/', max_length=255, null=True, blank=True)
     overview = models.TextField()
-    estimated_time = models.IntegerField(help_text="Should be in minutes")
+    estimated_time = models.PositiveSmallIntegerField(help_text="Should be in hours")
+    price = models.PositiveIntegerField(default=0)
+    price_before_discount = models.PositiveIntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
     enrolled_for = models.ManyToManyField(User, related_name='enrolled_for')
     
     class Meta:
     
         ordering = ['-created']
+
+    def get_author(self):
+        profile = users.models.Profile.objects.get(user=self.author)
+        return {"id": profile.id, "first_name": profile.first_name, "last_name": profile.last_name}
 
     def get_category(self):
         return {"id": self.category.id, "title": self.category.title}

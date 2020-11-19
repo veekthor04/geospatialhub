@@ -5,7 +5,7 @@ from .models import Course, Module, CourseChat, Category
 class CourseSerializer(serializers.ModelSerializer):
 
     module_count = serializers.SerializerMethodField()
-
+    author = serializers.DictField(child = serializers.CharField(),source='get_author')
     category = serializers.DictField(child = serializers.CharField(),source='get_category')
 
     def get_module_count(self, course):
@@ -14,7 +14,7 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = Course
-        fields = ('id', 'author','category', 'title', 'course_pic', 'overview', 'estimated_time', 'created', 'module_count')
+        fields = ('id', 'author','category', 'title', 'course_pic', 'overview', 'estimated_time', 'price', 'price_before_discount', 'created', 'module_count')
 
 
 class ModuleSerializer(serializers.ModelSerializer):

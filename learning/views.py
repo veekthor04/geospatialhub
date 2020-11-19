@@ -131,17 +131,13 @@ def Payment(request,pk):
 
         r = requests.get    (url, headers=headers)
 
-        print(r.status_code)
-        print(r.json())
-
         if r.json()['data']['status'] == 'success':
             course.enrolled_for.add(user)
-
 
         return Response({'status':r.json()['data']['status']})
 
     reference = ''.join([choice(ascii_letters + digits) for n in range(16)])
-    amount = 20000
+    amount = course.price * 100
     email = user.email
     data = {'reference':reference,'amount':amount, 'email':email }
     url = 'https://api.paystack.co/transaction/initialize'
