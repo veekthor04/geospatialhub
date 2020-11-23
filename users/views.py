@@ -9,8 +9,12 @@ from .permissions import IsAuthorOrReadOnly, IsPostOwner
 from .serializers import UserSerializer, ProfileSerializer, PostSerializer, PostRateSerializer, FollowerSerializer, MessageSerializer
 from .models import Profile, Post, PostRate, Follower, Message
 from django.db.models import Q
+from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
 
-
+@method_decorator(name='list', decorator=swagger_auto_schema(
+    operation_description="This displays the list of all users on the platform"
+))
 class UserViewSet(viewsets.ModelViewSet):
     
     permission_classes = (IsAuthorOrReadOnly,)
@@ -126,6 +130,7 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Message.objects.filter(sender=self.request.user)
+
 
 @api_view(['GET'])
 def MessagesList(request):

@@ -7,6 +7,7 @@ class CourseSerializer(serializers.ModelSerializer):
     module_count = serializers.SerializerMethodField()
     author = serializers.DictField(child = serializers.CharField(),source='get_author')
     category = serializers.DictField(child = serializers.CharField(),source='get_category')
+    is_user_enrolled = serializers.BooleanField(source='get_is_user_enrolled')
 
     def get_module_count(self, course):
         return course.modules.count()
@@ -14,8 +15,14 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = Course
-        fields = ('id', 'author','category', 'title', 'course_pic', 'overview', 'estimated_time', 'price', 'price_before_discount', 'created', 'module_count')
+        fields = ('id', 'author','category', 'title', 'course_pic', 'overview', 'estimated_time', 'price', 'price_before_discount', 'created', 'module_count', 'is_user_enrolled')
 
+class CourseCategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+
+        model = Category
+        fields = '__all__'
 
 class ModuleSerializer(serializers.ModelSerializer):
 
