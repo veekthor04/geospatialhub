@@ -39,9 +39,6 @@ from rest_framework import pagination
 #         return Response(data=data)
 
 
-@method_decorator(name='list', decorator=swagger_auto_schema(
-    operation_description="This shows the list of all courses on the platform"
-))
 class ListCourse(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
     queryset = Course.objects.all()

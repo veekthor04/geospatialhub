@@ -4,7 +4,7 @@ from rest_framework.routers import SimpleRouter
 
 router = SimpleRouter()
 router.register(r'post', PostViewSet, basename='posts')
-router.register(r'message', MessageViewSet, basename='message')
+# router.register(r'message', MessageViewSet, basename='message')
 
 router.register('', UserViewSet, basename='users')
 
