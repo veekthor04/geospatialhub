@@ -79,7 +79,16 @@ class FollowerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Follower
-        fields = ('user', 'is_followed_by')
+        fields = ('user', 'is_followed_by', 'created')
+        read_only_fields = ('user', 'is_followed_by')
+
+class MyFollowerSerializer(serializers.ModelSerializer):
+    user = serializers.DictField(child = serializers.CharField(), source = 'get_user_info', read_only = True)
+    is_followed_by = serializers.DictField(child = serializers.CharField(), source = 'get_is_followed_by_info', read_only = True)
+
+    class Meta:
+        model = Follower
+        fields = ('user', 'is_followed_by', 'created', 'is_viewed')
         read_only_fields = ('user', 'is_followed_by')
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -91,3 +100,6 @@ class MessageSerializer(serializers.ModelSerializer):
         model = Message
         fields = ['sender', 'text', 'receiver', 'created', 'is_read']
         write_only_fields = ['text', 'receiver']
+
+
+# class NotificationSerializer()

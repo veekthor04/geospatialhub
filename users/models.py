@@ -5,6 +5,7 @@ from django.dispatch import receiver
 from learning.models import Course
 from django_currentuser.db.models import CurrentUserField
 from django_currentuser.middleware import get_current_user, get_current_authenticated_user
+from datetime import date
 
 
 class Profile(models.Model):
@@ -97,6 +98,8 @@ class PostRate(models.Model):
 class Follower(models.Model): 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
     is_followed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='is_followed_by')
+    is_viewed = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
 
     def get_user_info(self):
         return {"id": self.user.id, "username": self.user.username}
@@ -115,6 +118,9 @@ class Follower(models.Model):
 
     def get_followers_count(self, user):
         return Follower.objects.filter(user=user).count()
+
+    class Meta:
+        ordering = ['-created']
         
     def __str__(self):
         return str(self)
@@ -133,6 +139,9 @@ class Message(models.Model):
 
     def get_receiver(self):
         return {"id": self.receiver.id, "username": self.receiver.username}
+
+    def get_unread_count(self):
+        return Message.objects.filter(receiver= get_current_authenticated_user(), is_read=False).count()
     
     class Meta:
         ordering = ['-created']

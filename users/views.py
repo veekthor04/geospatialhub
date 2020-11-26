@@ -5,7 +5,7 @@ from rest_framework.parsers import JSONParser,FormParser, MultiPartParser
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from .permissions import IsAuthorOrReadOnly, IsPostOwner
-from .serializers import UserSerializer, ProfileSerializer, PostSerializer, PostRateSerializer, FollowerSerializer, MessageSerializer
+from .serializers import UserSerializer, ProfileSerializer, PostSerializer, PostRateSerializer, FollowerSerializer, MyFollowerSerializer, MessageSerializer
 from .models import Profile, Post, PostRate, Follower, Message
 from django.db.models import Q
 from django.utils.decorators import method_decorator
@@ -146,8 +146,7 @@ class CommentList(generics.ListAPIView):
     responses={200: openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            'status': openapi.Schema(type=openapi.TYPE_STRING),
-            'count': openapi.Schema(type=openapi.TYPE_INTEGER)
+            'status': openapi.Schema(type=openapi.TYPE_STRING)
         }
     )},
     operation_description="The current user follows or unfollows a user"
@@ -159,48 +158,83 @@ def Follow(request, pk):
     if not already_followed:
         new_follower = Follower(user = user, is_followed_by = request.user)
         new_follower.save()
-        follower_count = Follower.objects.filter(user = user).count()
-        data={'status': 'Following', 'count': follower_count}
+        data={'status': 'Followed'}
         return Response(data=data)
     else:
         already_followed.delete()
-        follower_count = Follower.objects.filter(user = user).count()
-        data={'status': 'Not following', 'count': follower_count}
+        data={'status': 'Unfollowed'}
         return Response(data=data)
 
 
-@method_decorator(name='list', decorator=swagger_auto_schema(
-    operation_description="Displays the users the selected user is following"
-))
-class Following(generics.ListCreateAPIView):
+class Following(generics.ListAPIView):
     serializer_class = FollowerSerializer
 
     def get_queryset(self):
         user = get_object_or_404(get_user_model(), pk = self.kwargs["pk"])
-        return Follower.objects.filter(is_followed_by = user)
+        return Follower.objects.filter(is_followed_by = user).exclude(user=user)
+    
+    @method_decorator(name='list', decorator=swagger_auto_schema(
+    operation_description="Displays the users the selected user is following"
+    ))
+    def get(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
-@method_decorator(name='list', decorator=swagger_auto_schema(
-    operation_description="Displays the users following the selected user"
-))
-class Followers(generics.ListCreateAPIView):
-    queryset = Follower.objects.all()
+
+class Followers(generics.ListAPIView):
     serializer_class = FollowerSerializer
 
     def get_queryset(self):
         user = get_object_or_404(get_user_model(), pk = self.kwargs["pk"])
         return Follower.objects.filter(user = user).exclude(is_followed_by = user)
-
-
-@method_decorator(name='list', decorator=swagger_auto_schema(
-    operation_description="Displays the users the selected user is following"
-))
-class MessageViewSet(viewsets.ModelViewSet):
     
-    permission_classes = (permissions.AllowAny,)
-    serializer_class = MessageSerializer
+    @method_decorator(name='list', decorator=swagger_auto_schema(
+    operation_description="Displays the users following the selected user"
+    ))
+    def get(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
+
+class MyFollowing(generics.ListAPIView):
+    serializer_class = FollowerSerializer
     def get_queryset(self):
-        return Message.objects.filter(sender=self.request.user)
+        return Follower.objects.filter(is_followed_by=self.request.user).exclude(user=self.request.user)
+
+    @method_decorator(name='list', decorator=swagger_auto_schema(
+    operation_description="Displays the users the current user is following"
+    ))
+    def get(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+@swagger_auto_schema(
+    method='get',
+    responses={200: MyFollowerSerializer(many=True)},
+    operation_description="Displays the users following the current user"
+)
+@api_view(['GET'])
+def MyFollowers(request):
+
+    user = request.user
+    
+    followers = Follower.objects.filter(user=user).exclude(is_followed_by=user)
+
+    paginator = pagination.PageNumberPagination()
+    paginator.page_size = 10
+    message_page = paginator.paginate_queryset(followers, request)
+    serializer = MyFollowerSerializer(message_page, many=True)
+
+    for follower in followers:
+        if follower.user==user and follower.is_viewed==False:
+            follower.is_viewed = True
+            follower.save()
+
+    return paginator.get_paginated_response(serializer.data)
+
  
 @swagger_auto_schema(
     method='get',
@@ -266,11 +300,37 @@ def SingleMessage(request,pk):
     
     messages = Message.objects.filter(Q(sender__in= [user,user_pal]) & Q(receiver__in= [user,user_pal]))
 
+    paginator = pagination.PageNumberPagination()
+    paginator.page_size = 10
+    message_page = paginator.paginate_queryset(messages, request)
+    serializer = MessageSerializer(message_page, many=True)
+
     for message in messages:
-        if message.receiver==user:
+        if message.receiver==user and message.is_read==False:
             message.is_read = True
             message.save()
 
-    serializer = MessageSerializer(messages, many=True)
+    return paginator.get_paginated_response(serializer.data)
 
-    return Response(serializer.data)
+
+@swagger_auto_schema(
+    method='get',
+    responses={200: openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'unread_message_count': openapi.Schema(type=openapi.TYPE_INTEGER),
+            'new_follow_count': openapi.Schema(type=openapi.TYPE_INTEGER)
+        }
+    )},
+    operation_description="This displays the number of unread messages and new followers"
+)
+@api_view(['GET'])
+def Notification(request):
+
+    user = request.user
+    unread_count = Message.objects.filter(receiver=user, is_read=False).count()
+    new_follow_count = Follower.objects.filter(user=user, is_viewed=False).exclude(is_followed_by = user).count()
+
+    return Response({'unread_message_count': unread_count, 'new_follow_count': new_follow_count})
+
+
