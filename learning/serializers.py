@@ -17,12 +17,14 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = ('id', 'author','category', 'title', 'course_pic', 'overview', 'estimated_time', 'price', 'price_before_discount', 'created', 'module_count', 'is_user_enrolled')
 
+
 class CourseCategorySerializer(serializers.ModelSerializer):
 
     class Meta:
 
         model = Category
-        fields = '__all__'
+        fields = ('id', 'title')
+
 
 class ModuleSerializer(serializers.ModelSerializer):
 
@@ -47,7 +49,7 @@ class SingleCourseSerializer(serializers.ModelSerializer):
     modules = ModuleSerializer(many=True, read_only=True)
     # coursechats = CourseChatSerializer(many=True, read_only=True)
     category = serializers.DictField(child = serializers.CharField(),source='get_category')
-    is_enrolled = serializers.BooleanField(source = 'get_is_user_enrolled', read_only = True)
+    is_user_enrolled = serializers.BooleanField(source='get_is_user_enrolled')
     module_count = serializers.SerializerMethodField()
 
     def get_module_count(self, course):
@@ -56,13 +58,15 @@ class SingleCourseSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = Course
-        fields = ('id', 'author', 'category', 'title', 'course_pic', 'overview', 'estimated_time', 'created','module_count','modules','is_enrolled')
+        fields = ('id', 'author', 'category', 'title', 'course_pic', 'overview', 'estimated_time', 'created', 'module_count', 'is_user_enrolled', 'modules')
+
 
 class FreeSingleCourseSerializer(serializers.ModelSerializer):
 
     modules = serializers.SerializerMethodField('get_free')
     module_count = serializers.SerializerMethodField()
     category = serializers.DictField(child = serializers.CharField(),source='get_category')
+    is_user_enrolled = serializers.BooleanField(source='get_is_user_enrolled')
 
     def get_module_count(self, course):
         return course.modules.count()
@@ -75,4 +79,4 @@ class FreeSingleCourseSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = Course
-        fields = ('id', 'author','category' , 'title', 'course_pic', 'overview', 'estimated_time', 'created','module_count' ,'modules')
+        fields = ('id', 'author','category' , 'title', 'course_pic', 'overview', 'estimated_time', 'price', 'price_before_discount', 'created','module_count', 'is_user_enrolled', 'modules')

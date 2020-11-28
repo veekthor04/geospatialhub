@@ -1,16 +1,17 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, permissions, viewsets, pagination
+from rest_framework import generics, permissions, viewsets, pagination, filters
 from rest_framework.parsers import JSONParser,FormParser, MultiPartParser
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from .permissions import IsAuthorOrReadOnly, IsPostOwner
-from .serializers import UserSerializer, ProfileSerializer, PostSerializer, PostRateSerializer, FollowerSerializer, MyFollowerSerializer, MessageSerializer
+from .serializers import UserSerializer, ProfileSerializer, ListUserSerializer, PostSerializer, PostRateSerializer, FollowerSerializer, MyFollowerSerializer, MessageSerializer
 from .models import Profile, Post, PostRate, Follower, Message
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+
 
 @method_decorator(name='list', decorator=swagger_auto_schema(
     operation_description="This displays the list of all users on the platform"
@@ -43,6 +44,22 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=200)
         else:
             return Response(serializer.errors, stutus=400)
+
+
+class ListUser(generics.ListAPIView):
+    permission_classes = (permissions.AllowAny,)
+    queryset = get_user_model().objects.all()
+    serializer_class = ListUserSerializer
+
+    @method_decorator(name='list', decorator=swagger_auto_schema(
+    operation_description="This shows the list of all users on the platform (lighter)"
+    ))
+    def get(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        paginator = pagination.PageNumberPagination()
+        queryset_page = paginator.paginate_queryset(queryset, request)
+        serializer = self.get_serializer(queryset_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 @method_decorator(name='list', decorator=swagger_auto_schema(

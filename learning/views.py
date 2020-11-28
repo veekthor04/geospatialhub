@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, pagination, filters
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import Course, Module, CourseChat, Category
@@ -12,8 +12,6 @@ import requests
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from rest_framework import pagination
-
 
 # Create your views here.
 # @method_decorator(name='list', decorator=swagger_auto_schema(
@@ -38,19 +36,23 @@ from rest_framework import pagination
 #         data = { 'courses' : response_list, 'categories' : all_categories }
 #         return Response(data=data)
 
-
 class ListCourse(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    search_fields = ('title', 'overview', 'category__title')
+    ordering_fields = ('title', 'created')
 
     @method_decorator(name='list', decorator=swagger_auto_schema(
     operation_description="This shows the list of all courses on the platform"
     ))
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        paginator = pagination.PageNumberPagination()
+        queryset_page = paginator.paginate_queryset(queryset, request)
+        serializer = self.get_serializer(queryset_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 class ListCourseCategory(generics.ListAPIView):
@@ -64,13 +66,17 @@ class ListCourseCategory(generics.ListAPIView):
     ))
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        paginator = pagination.PageNumberPagination()
+        queryset_page = paginator.paginate_queryset(queryset, request)
+        serializer = self.get_serializer(queryset_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 class ListEnrolledCourse(generics.ListAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    filter_backends = (filters.OrderingFilter,)
+    ordering_fields = ('title', 'created')
 
     def get_queryset(self):
         return Course.objects.filter(enrolled_for=self.request.user)

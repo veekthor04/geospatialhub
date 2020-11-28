@@ -14,7 +14,19 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = Profile
-        fields = ('id', 'first_name', 'last_name','phone', 'profile_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','organisation', 'institution', 'occupation' ,'followers_count', 'following_count', 'follow_status', 'unread_count', 'enrolled_for' )
+        fields = ('first_name', 'last_name','phone', 'profile_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','organisation', 'institution', 'occupation' ,'followers_count', 'following_count', 'follow_status', 'unread_count', 'enrolled_for' )
+
+
+class ListProfileSerializer(serializers.ModelSerializer):
+    followers_count = serializers.IntegerField(source='get_followers_count')
+    following_count = serializers.IntegerField(source='get_following_count')
+    follow_status = serializers.CharField(source='get_follow_status')
+
+    class Meta:
+
+        model = Profile
+        fields = ('first_name', 'last_name', 'profile_pic', 'followers_count', 'following_count', 'follow_status')
+
 
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()
@@ -46,6 +58,16 @@ class UserSerializer(serializers.ModelSerializer):
         profile.save()
 
         return instance
+
+
+class ListUserSerializer(serializers.ModelSerializer):
+    profile = ListProfileSerializer()
+
+    class Meta:
+
+        model = get_user_model()
+        fields = ('id', 'username', 'profile' )
+
 
 class CustomTokenSerializer(serializers.ModelSerializer):
 
