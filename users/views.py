@@ -336,7 +336,7 @@ def SingleMessage(request,pk):
         type=openapi.TYPE_OBJECT,
         properties={
             'unread_message_count': openapi.Schema(type=openapi.TYPE_INTEGER),
-            'new_follow_count': openapi.Schema(type=openapi.TYPE_INTEGER)
+            'new_follower': openapi.Schema(type=openapi.TYPE_INTEGER)
         }
     )},
     operation_description="This displays the number of unread messages and new followers"
@@ -363,7 +363,7 @@ def Notification(request):
             'profile_pic': pic,
             'created': follower.created,
         })
-        
+
         follower.is_viewed = True
         follower.save()  
 
