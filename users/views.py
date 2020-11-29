@@ -346,8 +346,25 @@ def Notification(request):
 
     user = request.user
     unread_count = Message.objects.filter(receiver=user, is_read=False).count()
-    new_follow_count = Follower.objects.filter(user=user, is_viewed=False).exclude(is_followed_by = user).count()
+    follower = Follower.objects.filter(user=user, is_viewed=False).exclude(is_followed_by = user)
+    new_follower = []
 
-    return Response({'unread_message_count': unread_count, 'new_follow_count': new_follow_count})
+    for follower in follower:
+        pic = follower.is_followed_by.profile.profile_pic
+
+        if not pic:
+            pic = None
+
+        new_follower.append({
+            'id': follower.is_followed_by.id,
+            'username': follower.is_followed_by.username,
+            'first_name': follower.is_followed_by.first_name,
+            'last_name': follower.is_followed_by.last_name,
+            'profile_pic': pic,
+            'created': follower.created,
+        })  
+
+
+    return Response({'unread_message_count': unread_count, 'new_follower': new_follower})
 
 

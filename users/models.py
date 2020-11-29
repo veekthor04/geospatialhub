@@ -62,7 +62,7 @@ class Post(models.Model):
     text = models.CharField(max_length=200)
     posted_by = CurrentUserField(related_name='posted_by')
     pub_date = models.DateTimeField('Publication Date', auto_now=True)
-    image = models.ImageField(upload_to='post-images', null=True)
+    image = models.ImageField(upload_to='geospatialhub/post-images/', null=True)
     in_reply_to_post = models.IntegerField(null=True)
 
     def get_post_belongs_to_authenticated_user(self):

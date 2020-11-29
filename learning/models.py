@@ -81,3 +81,12 @@ class CourseChat(models.Model):
     def __str__(self):
 
         return self.id
+
+class Payment(models.Model):
+
+    user = models.ForeignKey(User, related_name='payment', on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, related_name='Payment', on_delete=models.CASCADE)
+    amount = models.PositiveIntegerField(default=0)
+    completed = models.BooleanField(default=False)
+    reversed = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
