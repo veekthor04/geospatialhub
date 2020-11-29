@@ -362,7 +362,10 @@ def Notification(request):
             'last_name': follower.is_followed_by.last_name,
             'profile_pic': pic,
             'created': follower.created,
-        })  
+        })
+        
+        follower.is_viewed = True
+        follower.save()  
 
 
     return Response({'unread_message_count': unread_count, 'new_follower': new_follower})
