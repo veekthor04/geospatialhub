@@ -67,12 +67,12 @@ class Post(models.Model):
 
     def get_post_belongs_to_authenticated_user(self):
         return self.posted_by.pk == get_current_authenticated_user().pk
-        # return True
 
-
+    def get_authenticated_user_like_status(self):
+        return PostRate.objects.filter(rated_by=get_current_authenticated_user(), rated_post= self, liked=True).exists()
+    
     def get_user(self):
-        # user_dict = vars(self.posted_by)
-        return {"id": self.posted_by.id, "username": self.posted_by.username}
+        return {"id": self.posted_by.id, "username": self.posted_by.username, 'first_name': self.posted_by.profile.first_name, 'last_name': self.posted_by.profile.last_name, 'profile_pic': self.posted_by.profile.profile_pic}
 
     def get_likes_count(self):
         return PostRate.objects.filter(liked=True, rated_post=self).count()
@@ -90,7 +90,7 @@ class PostRate(models.Model):
     liked = models.BooleanField(null=True)
     rated_post = models.ForeignKey(Post, on_delete=models.CASCADE)
     rated_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    
+
     def __str__(self):
         return str(self.rated_post)
 

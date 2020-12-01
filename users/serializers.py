@@ -79,13 +79,14 @@ class CustomTokenSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     post_belongs_to_authenticated_user = serializers.BooleanField(source = 'get_post_belongs_to_authenticated_user', read_only = True)
+    authenticated_user_like_status = serializers.BooleanField(source = 'get_authenticated_user_like_status', read_only = True)
     posted_by = serializers.DictField(child = serializers.CharField(), source = 'get_user', read_only = True)
     likes_count = serializers.IntegerField(source='get_likes_count', read_only = True)
     comments_count = serializers.IntegerField(source='get_comments_count', read_only = True)
 
     class Meta:
         model = Post
-        fields = ['id', 'post_belongs_to_authenticated_user', 'posted_by', 'pub_date', 'text', 'image', 'in_reply_to_post', 'likes_count', 'comments_count']
+        fields = ['id', 'post_belongs_to_authenticated_user', 'authenticated_user_like_status' ,'posted_by', 'pub_date', 'text', 'image', 'in_reply_to_post', 'likes_count', 'comments_count']
         write_only_fields = ['text', 'image', 'in_reply_to_post']
         
 class PostRateSerializer(serializers.ModelSerializer):
