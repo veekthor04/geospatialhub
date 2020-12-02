@@ -14,8 +14,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
-from django.conf.urls import url
+from django.urls import path
+from django.conf.urls import url, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.documentation import include_docs_urls 
@@ -51,9 +51,10 @@ urlpatterns = [
     path('api/v1/users/', include('users.urls')), 
     path('api/v1/courses/', include('learning.urls')), 
     path('api-auth/', include('rest_framework.urls')),
-    path('api/v1/rest-auth/', include('rest_auth.urls')),
-    path('api/v1/rest-auth/registration/',
-        include('rest_auth.registration.urls')),
+    path('api/v1/rest-auth/', include('rest_auth.urls')), 
+    path('api/v1/rest-auth/registration/', include('rest_auth.registration.urls')),
+
+    url(r'^', include('django.contrib.auth.urls')),
 ]
 
 if settings.DEBUG:
