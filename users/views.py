@@ -5,7 +5,7 @@ from rest_framework.parsers import JSONParser,FormParser, MultiPartParser
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from .permissions import IsAuthorOrReadOnly, IsPostOwner
-from .serializers import UserSerializer, ProfileSerializer, ListUserSerializer, PostSerializer, PostRateSerializer, FollowerSerializer, MyFollowerSerializer, MessageSerializer
+from .serializers import UserSerializer, ProfileSerializer, ListProfileSerializer, ListUserSerializer, PostSerializer, PostRateSerializer, FollowerSerializer, MyFollowerSerializer, MessageSerializer
 from .models import Profile, Post, PostRate, Follower, Message
 from django.db.models import Q
 from django.utils.decorators import method_decorator
@@ -50,6 +50,10 @@ class ListUser(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
     queryset = get_user_model().objects.all()
     serializer_class = ListUserSerializer
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    search_fields = ('username', 'profile__first_name', 'profile__last_name')
+    ordering_fields = ('profile__follower_count', 'profile__following_count')
+
 
     @method_decorator(name='list', decorator=swagger_auto_schema(
     operation_description="This shows the list of all users on the platform (lighter)"
@@ -171,15 +175,36 @@ class CommentList(generics.ListAPIView):
 @api_view(['GET'])
 def Follow(request, pk):
     user = get_object_or_404(get_user_model(), pk = pk)
-    already_followed = Follower.objects.filter(user = user, is_followed_by  = request.user).first()
-    if not already_followed:
-        new_follower = Follower(user = user, is_followed_by = request.user)
-        new_follower.save()
-        data={'status': 'Followed'}
-        return Response(data=data)
+    
+    if user != request.user:
+        already_followed = Follower.objects.filter(user = user, is_followed_by  = request.user).first()
+        if not already_followed:
+            new_follower = Follower(user = user, is_followed_by = request.user)
+            new_follower.save()
+            profile = Profile.objects.get(user=user)
+            profile.follower_count += 1
+            profile.save()
+
+            profile2 = Profile.objects.get(user=request.user)
+            profile2.following_count += 1
+            profile2.save()
+
+            data={'status': 'Followed'}
+            return Response(data=data)
+        else:
+            already_followed.delete()
+            profile = Profile.objects.get(user=user)
+            profile.follower_count -= 1
+            profile.save()
+
+            profile2 = Profile.objects.get(user=request.user)
+            profile2.following_count -= 1
+            profile2.save()
+
+            data={'status': 'Unfollowed'}
+            return Response(data=data)
     else:
-        already_followed.delete()
-        data={'status': 'Unfollowed'}
+        data={'status': 'you cannot follow yourself'}
         return Response(data=data)
 
 

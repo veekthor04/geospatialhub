@@ -23,12 +23,8 @@ class Profile(models.Model):
     organisation = models.CharField(max_length=200, blank=True)
     occupation = models.CharField(max_length=200, blank=True)
     institution = models.CharField(max_length=200, blank=True)
-
-    def get_followers_count(self):
-        return Follower.objects.filter(user = self.user).exclude(is_followed_by = self.user).count()
-
-    def get_following_count(self):
-        return Follower.objects.filter(is_followed_by = self.user).count()
+    follower_count = models.PositiveSmallIntegerField(default=0)
+    following_count = models.PositiveSmallIntegerField(default=0)
 
     def get_follow_status(self):
         follow_status = Follower.objects.filter(user = self.user, is_followed_by = get_current_authenticated_user())
