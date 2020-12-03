@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions, status, pagination, filters
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import Course, Module, CourseChat, Category
+from .models import Course, Module, CourseChat, Category, Payment as PaymentModel
 from users.models import Profile
 from .serializers import CourseSerializer, CourseCategorySerializer, SingleCourseSerializer, FreeSingleCourseSerializer, CourseChatSerializer, CourseChatSerializer
 from django_currentuser.middleware import get_current_authenticated_user
@@ -12,6 +12,7 @@ import requests
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+import datetime
 
 # Create your views here.
 # @method_decorator(name='list', decorator=swagger_auto_schema(
@@ -95,18 +96,7 @@ class ListEnrolledCourse(generics.ListAPIView):
     responses={200: SingleCourseSerializer(many=False)},
     operation_description="This shows the details of the selected course"
 )
-@swagger_auto_schema(
-    method='post', 
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'enroll': openapi.Schema(type=openapi.TYPE_BOOLEAN)
-        }
-    ),
-    responses={200: SingleCourseSerializer(many=False)},
-    operation_description="to unenroll from the current course"
-)
-@api_view(['GET','POST'])
+@api_view(['GET'])
 def DetailCourse(request,pk):
 
     try:
@@ -115,26 +105,74 @@ def DetailCourse(request,pk):
         
         return Response(status=status.HTTP_404_NOT_FOUND)
     
-    if request.method == 'POST':
-
-        user = request.user
-        enroll = request.data['enroll']
-        if enroll == True:
-                
-            course.enrolled_for.add(user)
-        
-        elif enroll == False:
-                
-            course.enrolled_for.remove(user)
-        
-
     if course.enrolled_for.filter(id=request.user.pk).exists():
+
         serializer = SingleCourseSerializer(course)
 
     else:
         serializer = FreeSingleCourseSerializer(course)
 
     return Response(serializer.data)
+
+
+@swagger_auto_schema(
+    method='get',
+    responses={200: openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'unenroll_status': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+            'refund_status': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+            'message': openapi.Schema(type=openapi.TYPE_STRING),
+        }
+    )},
+    operation_description="This unerolls a user from a cousre, checks if the user has not been refunded before and checks if it is within 14 days before carrying out a refund"
+)
+@api_view(['GET',])
+def DetailCourseUnenroll(request,pk):
+
+    try:
+        course = Course.objects.get(pk=pk)
+    except Course.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    user = request.user
+    secret_key = config('PAYSTACK_SECRET_KEY',cast=str)
+    headers = {'Authorization':secret_key}
+
+    course.enrolled_for.remove(user)
+
+    try:
+        course_payment = PaymentModel.objects.get( user=user, course=course)
+    except PaymentModel.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    delta = datetime.datetime.now().date() - course_payment.created.date()     
+
+    if delta.days <= 14 and course_payment.reversed == False:
+
+        secret_key = config('PAYSTACK_SECRET_KEY',cast=str)
+        headers = {'Authorization':secret_key}
+        
+        reference = course_payment.reference
+        amount = course_payment.amount
+        email = user.email
+        data = {'transaction':reference,'amount':amount, 'email':email }
+        url = 'https://api.paystack.co/refund'
+
+        course_payment.reversed = True
+        course_payment.save()
+
+        r = requests.post(url, headers=headers, data=data)
+
+        data = {"unenroll_status": True, "refund_status": r.json()['status'], "message": r.json()['message']}
+    
+    elif delta.days > 14 and course_payment.reversed == False:
+        data = {"unenroll_status": True, "refund_status": False, "message": "Course paymnet cannot be reversed after 14 days"}
+    
+    else:
+        data = {"unenroll_status": True, "refund_status": False, "message": "Course paymnet can only be reversed once"}
+        
+    return Response(data)
     
 
 @swagger_auto_schema(
@@ -176,7 +214,15 @@ def CourseChats(request,pk):
     return Response(serializer.data)
     
 @swagger_auto_schema(
-    method='get', 
+    method='get',
+    manual_parameters=[
+            openapi.Parameter(
+                name='callback_url', in_=openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                description="Redirect link after paymnet",
+                required=True
+            ),
+        ], 
     responses={200: openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
@@ -185,23 +231,9 @@ def CourseChats(request,pk):
             'reference': openapi.Schema(type=openapi.TYPE_STRING)
         }
     )},
-    operation_description="This shows payment infos and redirect link"
+    operation_description="This shows payment infos including the payment link"
 )
-@swagger_auto_schema(
-    method='post', 
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'reference': openapi.Schema(type=openapi.TYPE_STRING)
-        }
-    ),
-    responses={200: openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={'status': openapi.Schema(type=openapi.TYPE_STRING)}
-    )},
-    operation_description="This verifies if a payment is completed "
-)
-@api_view(['GET','POST'])
+@api_view(['GET',])
 def Payment(request,pk):
     try:
         course = Course.objects.get(pk=pk)
@@ -214,7 +246,9 @@ def Payment(request,pk):
 
     if request.method == 'POST':
 
-        reference = request.data['reference']
+        # reference = request.data['reference']
+        course_payment = PaymentModel.objects.get( user=user, course=course)
+        reference = course_payment.reference
 
         url = 'https://api.paystack.co/transaction/verify/' + reference
 
@@ -223,17 +257,77 @@ def Payment(request,pk):
         if r.json()['data']['status'] == 'success':
             course.enrolled_for.add(user)
 
+            course_payment.completed = True
+            course_payment.save()
+
         return Response({'status':r.json()['data']['status']})
 
     reference = ''.join([choice(ascii_letters + digits) for n in range(16)])
     amount = course.price * 100
     email = user.email
-    data = {'reference':reference,'amount':amount, 'email':email }
+    try:
+        callback_url = request.query_params["callback_url"]
+    except:
+         callback_url = None
+
+    data = {'reference':reference,'amount':amount, 'email':email, 'callback_url': callback_url}
     url = 'https://api.paystack.co/transaction/initialize'
+
+    if not PaymentModel.objects.filter(user=user, course=course).exists():
+        course_payment = PaymentModel.objects.create( user=user, course=course, reference=reference, amount=amount)
+        course_payment.save()
+    else:
+        course_payment = PaymentModel.objects.get(user=user, course=course)
+        course_payment.completed = False
+        course_payment.amount = amount
+        course_payment.reference = reference 
+        course_payment.save()
+        
 
     r = requests.post(url, headers=headers, data=data)
 
     print(r.json()['data'])
 
     return Response(r.json()['data'])
+
+
+@swagger_auto_schema(
+    method='get',
+    responses={200: openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'status': openapi.Schema(type=openapi.TYPE_STRING),
+        }
+    )},
+    operation_description="This shows is a payment was completed"
+)
+@api_view(['GET',])
+def PaymentConfirm(request,pk):
+    try:
+        course = Course.objects.get(pk=pk)
+    except Course.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    user = request.user
+    secret_key = config('PAYSTACK_SECRET_KEY',cast=str)
+    headers = {'Authorization':secret_key}
+
+    try:
+        course_payment = PaymentModel.objects.get( user=user, course=course)
+    except PaymentModel.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    reference = course_payment.reference
+
+    url = 'https://api.paystack.co/transaction/verify/' + reference
+
+    r = requests.get(url, headers=headers)
+
+    if r.json()['data']['status'] == 'success':
+        course.enrolled_for.add(user)
+
+        course_payment.completed = True
+        course_payment.save()
+
+    return Response({'status':r.json()['data']['status']})
     

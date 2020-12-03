@@ -86,6 +86,7 @@ class Payment(models.Model):
 
     user = models.ForeignKey(User, related_name='payment', on_delete=models.CASCADE)
     course = models.ForeignKey(Course, related_name='Payment', on_delete=models.CASCADE)
+    reference = models.CharField(max_length=50,default='')
     amount = models.PositiveIntegerField(default=0)
     completed = models.BooleanField(default=False)
     reversed = models.BooleanField(default=False)
