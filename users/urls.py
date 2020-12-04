@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserViewSet, ListUser, Post, PostRateViewSet, PostViewSet, CommentList, Follow, Followers, Following, MyFollowers, MyFollowing, MessagesList, SingleMessage, Notification
+from .views import Test, UserViewSet, ListUser, Post, PostRateViewSet, PostViewSet, CommentList, Follow, Followers, Following, MyFollowers, MyFollowing, MessagesList, SingleMessage, Notification
 from rest_framework.routers import SimpleRouter
 
 router = SimpleRouter()
@@ -22,7 +22,9 @@ urlpatterns = [
     path('chats/', MessagesList, name='chats'),
     path('chats/<int:pk>/', SingleMessage, name='single-chats'),
 
-    path('notification/', Notification, name='notifications')
+    path('notification/', Notification, name='notifications'),
+
+    path('test/', Test)
     
 ]
 

@@ -85,8 +85,8 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.action == 'list':
-            return Post.objects.filter(in_reply_to_post = None).order_by('-pub_date')
-        return Post.objects.order_by('-pub_date')
+            return Post.objects.filter(in_reply_to_post = None)
+        return Post.objects.all()
 
 
 class PostRateViewSet(generics.GenericAPIView):
@@ -220,9 +220,10 @@ class Following(generics.ListAPIView):
     ))
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
+        paginator = pagination.PageNumberPagination()
+        queryset_page = paginator.paginate_queryset(queryset, request)
+        serializer = self.get_serializer(queryset_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 class Followers(generics.ListAPIView):
     serializer_class = FollowerSerializer
@@ -236,8 +237,10 @@ class Followers(generics.ListAPIView):
     ))
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        paginator = pagination.PageNumberPagination()
+        queryset_page = paginator.paginate_queryset(queryset, request)
+        serializer = self.get_serializer(queryset_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 class MyFollowing(generics.ListAPIView):
@@ -250,8 +253,10 @@ class MyFollowing(generics.ListAPIView):
     ))
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        paginator = pagination.PageNumberPagination()
+        queryset_page = paginator.paginate_queryset(queryset, request)
+        serializer = self.get_serializer(queryset_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 @swagger_auto_schema(
     method='get',
@@ -394,5 +399,16 @@ def Notification(request):
 
 
     return Response({'unread_message_count': unread_count, 'new_follower': new_follower})
+
+@api_view(['GET'])
+def Test(request):
+
+    user = request.user
+    # followers = Follower.objects.filter(is_followed_by=user)
+    # for follower in followers:
+
+    #     print(follower)
+
+    return Response({})
 
 

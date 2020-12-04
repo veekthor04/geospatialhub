@@ -40,6 +40,9 @@ class Profile(models.Model):
             course_enrolled.append({"id": course.id, "title": course.title})
         return course_enrolled
 
+    class Meta:
+        ordering = ['-follower_count']
+
     def __str__(self):
         return self.user.username
 
@@ -78,6 +81,9 @@ class Post(models.Model):
 
     def get_comments_count(self):
         return Post.objects.filter(in_reply_to_post=self.pk).count()
+
+    class Meta:
+        ordering = ['-pub_date']
 
     def __str__(self):
         return str(self)
