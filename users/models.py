@@ -40,6 +40,9 @@ class Profile(models.Model):
             course_enrolled.append({"id": course.id, "title": course.title})
         return course_enrolled
 
+    def get_post_count(self):
+        return  Post.objects.filter(posted_by=self.user).count()
+
     class Meta:
         ordering = ['-follower_count']
 

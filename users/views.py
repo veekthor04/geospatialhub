@@ -75,7 +75,8 @@ class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     permission_classes = [permissions.IsAuthenticated, IsPostOwner]
     parser_classes = (JSONParser, FormParser, MultiPartParser)
-    
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    search_fields = ('text',)    
     
     @action(detail=False, methods=['GET'], name='Get comments')
     def list_comments(self, request, *args, **kwargs):

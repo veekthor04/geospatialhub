@@ -8,11 +8,12 @@ class ProfileSerializer(serializers.ModelSerializer):
     follow_status = serializers.CharField(source='get_follow_status')
     enrolled_for = serializers.ListField(source='get_enrolled_for')
     unread_count = serializers.IntegerField(source='get_unread_count')
+    post_count = serializers.IntegerField(source='get_post_count')
 
     class Meta:
 
         model = Profile
-        fields = ('first_name', 'last_name','phone', 'profile_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','organisation', 'institution', 'occupation' ,'follower_count', 'following_count', 'follow_status', 'unread_count', 'enrolled_for' )
+        fields = ('first_name', 'last_name','phone', 'profile_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','organisation', 'institution', 'occupation' ,'follower_count', 'following_count', 'follow_status', 'unread_count', 'post_count', 'enrolled_for' )
 
 
 class ListProfileSerializer(serializers.ModelSerializer):
