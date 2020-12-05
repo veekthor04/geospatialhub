@@ -13,7 +13,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = Profile
-        fields = ('first_name', 'last_name','phone', 'profile_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','organisation', 'institution', 'occupation' ,'follower_count', 'following_count', 'follow_status', 'unread_count', 'post_count', 'enrolled_for' )
+        fields = ('first_name', 'last_name','phone', 'profile_pic', 'banner_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','organisation', 'institution', 'occupation' ,'follower_count', 'following_count', 'follow_status', 'unread_count', 'post_count', 'enrolled_for' )
 
 
 class ListProfileSerializer(serializers.ModelSerializer):

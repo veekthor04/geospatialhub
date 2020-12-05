@@ -28,7 +28,8 @@ class UserViewSet(viewsets.ModelViewSet):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'profile_pic': openapi.Schema(type=openapi.TYPE_FILE)
+                'profile_pic': openapi.Schema(type=openapi.TYPE_FILE),
+                'banner_pic': openapi.Schema(type=openapi.TYPE_FILE)
             }
         ),
         responses={200: UserSerializer(many=False)},
@@ -88,6 +89,20 @@ class PostViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             return Post.objects.filter(in_reply_to_post = None)
         return Post.objects.all()
+
+@swagger_auto_schema(
+    method='get',
+    responses={200: PostSerializer(many=True)},
+    operation_description="displays the sorted list of all post for a user"
+)
+@api_view(['GET'])
+def UserPost(request,pk):
+    
+    queryset = Post.objects.filter(posted_by=pk,in_reply_to_post = None)
+    paginator = pagination.PageNumberPagination()
+    queryset_page = paginator.paginate_queryset(queryset, request)
+    serializer = PostSerializer(queryset_page, many=True)
+    return paginator.get_paginated_response(serializer.data)
 
 
 class PostRateViewSet(generics.GenericAPIView):
