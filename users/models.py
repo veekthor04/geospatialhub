@@ -108,10 +108,10 @@ class Follower(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def get_user_info(self):
-        return {"id": self.user.id, "username": self.user.username}
+        return {"id": self.user.id, "username": self.user.username, "first_name": self.user.profile.first_name, "last_name": self.user.profile.last_name,  "profile_pic": self.user.profile.profile_pic}
 
     def get_is_followed_by_info(self):
-        return {"id": self.is_followed_by.id, "username": self.is_followed_by.username}
+        return {"id": self.is_followed_by.id, "username": self.is_followed_by.username, "first_name": self.is_followed_by.profile.first_name, "last_name": self.is_followed_by.profile.last_name,  "profile_pic": self.is_followed_by.profile.profile_pic}
         
     def get_following(self, user):
         return Follower.objects.filter(is_followed_by=user)
