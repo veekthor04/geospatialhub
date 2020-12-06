@@ -4,17 +4,25 @@ from rest_auth.serializers import TokenSerializer
 from .models import Profile, Post, PostRate, Follower, Message
 
 
+class ProfileUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+
+        model = get_user_model()
+        fields = ('username','email')
+
 class ProfileSerializer(serializers.ModelSerializer):
     follow_status = serializers.CharField(source='get_follow_status')
     enrolled_for = serializers.ListField(source='get_enrolled_for')
     unread_count = serializers.IntegerField(source='get_unread_count')
     post_count = serializers.IntegerField(source='get_post_count')
+    user = ProfileUserSerializer()
 
     class Meta:
 
         model = Profile
-        fields = ('first_name', 'last_name','phone', 'profile_pic', 'banner_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','organisation', 'institution', 'occupation' ,'follower_count', 'following_count', 'follow_status', 'unread_count', 'post_count', 'enrolled_for' )
-
+        fields = ('id', 'user', 'first_name', 'last_name','phone', 'profile_pic', 'banner_pic','bio','date_of_birth', 'location_city', 'location_state','location_country','organisation', 'institution', 'occupation' ,'follower_count', 'following_count', 'follow_status', 'unread_count', 'post_count', 'enrolled_for' )
+        read_only_fields = ('follower_count', 'following_count', 'follow_status', 'unread_count', 'enrolled_for', 'post_count')
 
 class ListProfileSerializer(serializers.ModelSerializer):
     follow_status = serializers.CharField(source='get_follow_status')
@@ -32,6 +40,8 @@ class UserSerializer(serializers.ModelSerializer):
 
         model = get_user_model()
         fields = ('id', 'username','email', 'profile' )
+        # read_only_fields = ('profile__follower_count', 'profile__following_count', 'profile__follow_status', 'profile__unread_count', 'profile__enrolled_for', 'profile__post_count')
+        
 
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('profile')
@@ -50,7 +60,9 @@ class UserSerializer(serializers.ModelSerializer):
         profile.location_city = profile_data.get('location_city', profile.location_city)
         profile.location_state = profile_data.get('location_state', profile.location_state)
         profile.location_country = profile_data.get('location_country', profile.location_country)
-        profile.company = profile_data.get('company', profile.company)
+        profile.organisation = profile_data.get('organisation', profile.company)
+        profile.occupation = profile_data.get('occupation', profile.company)
+        profile.institution = profile_data.get('institution', profile.company)
 
         profile.save()
 

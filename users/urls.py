@@ -1,13 +1,14 @@
 from django.urls import path
-from .views import Test, UserViewSet, ListUser, Post, UserPost, PostRateViewSet, PostViewSet, CommentList, Follow, Followers, Following, MyFollowers, MyFollowing, MessagesList, SingleMessage, Notification
+from .views import Test, ProfileViewSet, ListUser, Post, UserPost, PostRateViewSet, PostViewSet, CommentList, Follow, Followers, Following, MyFollowers, MyFollowing, MessagesList, SingleMessage, Notification
 from rest_framework.routers import SimpleRouter
 
 router = SimpleRouter()
 router.register(r'post', PostViewSet, basename='posts')
-router.register('', UserViewSet, basename='users')
+# router.register('', UserViewSet, basename='users')
 
 urlpatterns = [
 
+    path('<int:pk>/', ProfileViewSet.as_view(), name='users'),
     path('list-all/', ListUser.as_view(), name='list user'),
 
     path('post/rate/<int:pk>/', PostRateViewSet.as_view(), name='rate'),

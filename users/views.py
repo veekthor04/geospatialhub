@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, permissions, viewsets, pagination, filters
+from rest_framework import generics, permissions, viewsets, pagination, filters, mixins
 from rest_framework.parsers import JSONParser,FormParser, MultiPartParser
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
@@ -13,38 +13,79 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 
-@method_decorator(name='list', decorator=swagger_auto_schema(
-    operation_description="This displays the list of all users on the platform"
-))
-class UserViewSet(viewsets.ModelViewSet):
-    
-    permission_classes = (IsAuthorOrReadOnly,)
-    queryset = get_user_model().objects.all()
-    serializer_class = UserSerializer
-    parser_classes = (JSONParser, FormParser, MultiPartParser)
+class ProfileViewSet(mixins.RetrieveModelMixin, generics.GenericAPIView):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    @swagger_auto_schema(
-        method='put', 
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'profile_pic': openapi.Schema(type=openapi.TYPE_FILE),
-                'banner_pic': openapi.Schema(type=openapi.TYPE_FILE)
-            }
-        ),
-        responses={200: UserSerializer(many=False)},
-        operation_description="to upload the user's profile pic"
-    )
-    @action(detail=True, methods=['put'])
-    def profile(self, request, pk=None):
-        user = self.get_object()
-        profile = user.profile
-        serializer = ProfileSerializer(profile, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=200)
-        else:
-            return Response(serializer.errors, stutus=400)
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        profile = Profile.objects.filter(user = request.user).first()
+        profile.first_name = request.data['first_name']
+        profile.last_name = request.data['last_name']
+        profile.phone = request.data['phone']
+        profile.bio = request.data['bio']
+        profile.date_of_birth = request.data['date_of_birth']
+        profile.location_city = request.data['location_city']
+        profile.location_state = request.data['location_state']
+        profile.location_country = request.data['location_country']
+        profile.organisation = request.data['organisation']
+        profile.occupation = request.data['occupation']
+        profile.institution = request.data['institution']
+        profile.save()
+
+        return Response({"response": "change successful"})
+
+    def post(self, request, *args, **kwargs):
+        profile = Profile.objects.filter(user = request.user).first()
+        try:
+            profile.profile_pic = request.data['profile_pic']
+        except:
+            pass
+
+        try:
+            profile.banner_pic = request.data['banner_pic']
+        except:
+            pass
+
+        profile.save()
+
+        return Response({"response": "change successful"})
+
+# @method_decorator(name='list', decorator=swagger_auto_schema(
+#     operation_description="This displays the list of all users on the platform"
+# ))
+# class UserViewSet(viewsets.ModelViewSet):
+    
+#     permission_classes = (IsAuthorOrReadOnly,)
+#     queryset = Profile.objects.all()
+#     serializer_class = ProfileSerializer
+#     parser_classes = (JSONParser, FormParser, MultiPartParser)
+
+    # @swagger_auto_schema(
+    #     method='put', 
+    #     request_body=openapi.Schema(
+    #         type=openapi.TYPE_OBJECT,
+    #         properties={
+    #             'profile_pic': openapi.Schema(type=openapi.TYPE_FILE),
+    #             'banner_pic': openapi.Schema(type=openapi.TYPE_FILE)
+    #         }
+    #     ),
+    #     responses={200: UserSerializer(many=False)},
+    #     operation_description="to upload the user's profile pic"
+    # )
+    # @action(detail=True, methods=['put'])
+    # def profile(self, request, pk=None):
+    #     user = self.get_object()
+    #     profile = user.profile
+    #     serializer = ProfileSerializer(profile, data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=200)
+    #     else:
+    #         return Response(serializer.errors, status=400)
 
 
 class ListUser(generics.ListAPIView):
