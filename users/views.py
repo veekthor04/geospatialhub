@@ -54,38 +54,15 @@ class ProfileViewSet(mixins.RetrieveModelMixin, generics.GenericAPIView):
 
         return Response({"response": "change successful"})
 
-# @method_decorator(name='list', decorator=swagger_auto_schema(
-#     operation_description="This displays the list of all users on the platform"
-# ))
-# class UserViewSet(viewsets.ModelViewSet):
+@method_decorator(name='list', decorator=swagger_auto_schema(
+    operation_description="This displays the list of all users on the platform"
+))
+class UserViewSet(viewsets.ModelViewSet):
     
-#     permission_classes = (IsAuthorOrReadOnly,)
-#     queryset = Profile.objects.all()
-#     serializer_class = ProfileSerializer
-#     parser_classes = (JSONParser, FormParser, MultiPartParser)
+    permission_classes = (IsAuthorOrReadOnly,)
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
 
-    # @swagger_auto_schema(
-    #     method='put', 
-    #     request_body=openapi.Schema(
-    #         type=openapi.TYPE_OBJECT,
-    #         properties={
-    #             'profile_pic': openapi.Schema(type=openapi.TYPE_FILE),
-    #             'banner_pic': openapi.Schema(type=openapi.TYPE_FILE)
-    #         }
-    #     ),
-    #     responses={200: UserSerializer(many=False)},
-    #     operation_description="to upload the user's profile pic"
-    # )
-    # @action(detail=True, methods=['put'])
-    # def profile(self, request, pk=None):
-    #     user = self.get_object()
-    #     profile = user.profile
-    #     serializer = ProfileSerializer(profile, data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data, status=200)
-    #     else:
-    #         return Response(serializer.errors, status=400)
 
 
 class ListUser(generics.ListAPIView):
