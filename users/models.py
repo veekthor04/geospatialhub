@@ -75,7 +75,11 @@ class Post(models.Model):
         return PostRate.objects.filter(rated_by=get_current_authenticated_user(), rated_post= self, liked=True).exists()
     
     def get_user(self):
-        return {"id": self.posted_by.id, "username": self.posted_by.username, 'first_name': self.posted_by.profile.first_name, 'last_name': self.posted_by.profile.last_name, 'profile_pic': self.posted_by.profile.profile_pic.url}
+        try:
+           profile_pic = self.posted_by.profile.profile_pic.url
+        except:
+            profile_pic = self.posted_by.profile.profile_pic
+        return {"id": self.posted_by.id, "username": self.posted_by.username, 'first_name': self.posted_by.profile.first_name, 'last_name': self.posted_by.profile.last_name, 'profile_pic': profile_pic}
 
     def get_likes_count(self):
         return PostRate.objects.filter(liked=True, rated_post=self).count()
@@ -108,10 +112,18 @@ class Follower(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def get_user_info(self):
-        return {"id": self.user.id, "username": self.user.username, "first_name": self.user.profile.first_name, "last_name": self.user.profile.last_name,  "profile_pic": self.user.profile.profile_pic.url}
+        try:
+           profile_pic = self.user.profile.profile_pic.url
+        except:
+            profile_pic = self.user.profile.profile_pic
+        return {"id": self.user.id, "username": self.user.username, "first_name": self.user.profile.first_name, "last_name": self.user.profile.last_name,  "profile_pic": profile_pic}
 
     def get_is_followed_by_info(self):
-        return {"id": self.is_followed_by.id, "username": self.is_followed_by.username, "first_name": self.is_followed_by.profile.first_name, "last_name": self.is_followed_by.profile.last_name,  "profile_pic": self.is_followed_by.profile.profile_pic.url}
+        try:
+           profile_pic = self.is_followed_by.profile.profile_pic.url
+        except:
+            profile_pic = self.is_followed_by.profile.profile_pic
+        return {"id": self.is_followed_by.id, "username": self.is_followed_by.username, "first_name": self.is_followed_by.profile.first_name, "last_name": self.is_followed_by.profile.last_name,  "profile_pic": profile_pic}
         
     def get_following(self, user):
         return Follower.objects.filter(is_followed_by=user)
