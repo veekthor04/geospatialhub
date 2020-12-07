@@ -60,8 +60,8 @@ class ProfileViewSet(mixins.RetrieveModelMixin, generics.GenericAPIView):
 class UserViewSet(viewsets.ModelViewSet):
     
     permission_classes = (IsAuthorOrReadOnly,)
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
+    queryset = get_user_model().objects.all()
+    serializer_class = UserSerializer
 
 
 
