@@ -12,6 +12,8 @@ from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+paginator = pagination.PageNumberPagination()
+paginator.page_size = 1
 
 class ProfileViewSet(mixins.RetrieveModelMixin, generics.GenericAPIView):
     queryset = Profile.objects.all()
@@ -79,7 +81,6 @@ class ListUser(generics.ListAPIView):
     ))
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        paginator = pagination.PageNumberPagination()
         queryset_page = paginator.paginate_queryset(queryset, request)
         serializer = self.get_serializer(queryset_page, many=True)
         return paginator.get_paginated_response(serializer.data)
@@ -117,7 +118,6 @@ class PostViewSet(viewsets.ModelViewSet):
 def UserPost(request,pk):
     
     queryset = Post.objects.filter(posted_by=pk,in_reply_to_post = None)
-    paginator = pagination.PageNumberPagination()
     queryset_page = paginator.paginate_queryset(queryset, request)
     serializer = PostSerializer(queryset_page, many=True)
     return paginator.get_paginated_response(serializer.data)
@@ -271,7 +271,6 @@ class Followers(generics.ListAPIView):
     ))
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        paginator = pagination.PageNumberPagination()
         queryset_page = paginator.paginate_queryset(queryset, request)
         serializer = self.get_serializer(queryset_page, many=True)
         return paginator.get_paginated_response(serializer.data)
@@ -287,7 +286,6 @@ class MyFollowing(generics.ListAPIView):
     ))
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        paginator = pagination.PageNumberPagination()
         queryset_page = paginator.paginate_queryset(queryset, request)
         serializer = self.get_serializer(queryset_page, many=True)
         return paginator.get_paginated_response(serializer.data)
@@ -304,8 +302,6 @@ def MyFollowers(request):
     
     followers = Follower.objects.filter(user=user).exclude(is_followed_by=user)
 
-    paginator = pagination.PageNumberPagination()
-    paginator.page_size = 10
     message_page = paginator.paginate_queryset(followers, request)
     serializer = MyFollowerSerializer(message_page, many=True)
 
@@ -338,8 +334,6 @@ def MessagesList(request):
             messages_pal.append(message.sender)
             messages_array.append(message)
     
-    paginator = pagination.PageNumberPagination()
-    paginator.page_size = 10
     message_page = paginator.paginate_queryset(messages_array, request)
     serializer = MessageSerializer(message_page, many=True)
     return paginator.get_paginated_response(serializer.data)
@@ -381,8 +375,6 @@ def SingleMessage(request,pk):
     
     messages = Message.objects.filter(Q(sender__in= [user,user_pal]) & Q(receiver__in= [user,user_pal]))
 
-    paginator = pagination.PageNumberPagination()
-    paginator.page_size = 10
     message_page = paginator.paginate_queryset(messages, request)
     serializer = MessageSerializer(message_page, many=True)
 

@@ -74,6 +74,13 @@ class CourseChat(models.Model):
     body = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
 
+    def get_sender_info(self):
+        try:
+           profile_pic = self.author.profile.profile_pic.url
+        except:
+            profile_pic = self.author.profile.profile_pic
+        return {"id": self.author.id, "username": self.author.username, "first_name": self.author.profile.first_name, "last_name": self.author.profile.last_name,  "profile_pic": profile_pic}
+
     class Meta:
     
         ordering = ['-created']

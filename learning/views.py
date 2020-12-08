@@ -14,6 +14,9 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 import datetime
 
+paginator = pagination.PageNumberPagination()
+paginator.page_size = 20
+
 # Create your views here.
 # @method_decorator(name='list', decorator=swagger_auto_schema(
 #     operation_description="This displays the list of all users on the platform"
@@ -50,7 +53,6 @@ class ListCourse(generics.ListAPIView):
     ))
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        paginator = pagination.PageNumberPagination()
         queryset_page = paginator.paginate_queryset(queryset, request)
         serializer = self.get_serializer(queryset_page, many=True)
         return paginator.get_paginated_response(serializer.data)
@@ -67,7 +69,6 @@ class ListCourseCategory(generics.ListAPIView):
     ))
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        paginator = pagination.PageNumberPagination()
         queryset_page = paginator.paginate_queryset(queryset, request)
         serializer = self.get_serializer(queryset_page, many=True)
         return paginator.get_paginated_response(serializer.data)
@@ -87,8 +88,9 @@ class ListEnrolledCourse(generics.ListAPIView):
     ))
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        queryset_page = paginator.paginate_queryset(queryset, request)
+        serializer = self.get_serializer(queryset_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 @swagger_auto_schema(
@@ -209,10 +211,11 @@ def CourseChats(request,pk):
         course_chat = CourseChat.objects.create( author=user, course=Course.objects.get(pk=pk), body=text)
         course_chat.save()
 
-    serializer = CourseChatSerializer(course_chats, many=True)
+    queryset_page = paginator.paginate_queryset(course_chats, request)
+    serializer = CourseChatSerializer(queryset_page, many=True)
+    return paginator.get_paginated_response(serializer.data)
 
-    return Response(serializer.data)
-    
+
 @swagger_auto_schema(
     method='get',
     manual_parameters=[

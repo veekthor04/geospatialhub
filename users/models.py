@@ -116,14 +116,28 @@ class Follower(models.Model):
            profile_pic = self.user.profile.profile_pic.url
         except:
             profile_pic = self.user.profile.profile_pic
-        return {"id": self.user.id, "username": self.user.username, "first_name": self.user.profile.first_name, "last_name": self.user.profile.last_name,  "profile_pic": profile_pic}
+        follow = Follower.objects.filter(user = self.user, is_followed_by = get_current_authenticated_user())
+        if self.user == get_current_authenticated_user():
+            follow_status = None
+        elif follow:
+            follow_status = "Following" 
+        else:
+            follow_status = "Follow"            
+        return {"id": self.user.id, "username": self.user.username, "first_name": self.user.profile.first_name, "last_name": self.user.profile.last_name,  "profile_pic": profile_pic, "follow_status": follow_status}
 
     def get_is_followed_by_info(self):
         try:
            profile_pic = self.is_followed_by.profile.profile_pic.url
         except:
             profile_pic = self.is_followed_by.profile.profile_pic
-        return {"id": self.is_followed_by.id, "username": self.is_followed_by.username, "first_name": self.is_followed_by.profile.first_name, "last_name": self.is_followed_by.profile.last_name,  "profile_pic": profile_pic}
+        follow = Follower.objects.filter(user = self.is_followed_by, is_followed_by = get_current_authenticated_user())
+        if self.is_followed_by == get_current_authenticated_user():
+            follow_status = None
+        elif follow:
+            follow_status = "Following" 
+        else:
+            follow_status = "Follow"
+        return {"id": self.is_followed_by.id, "username": self.is_followed_by.username, "first_name": self.is_followed_by.profile.first_name, "last_name": self.is_followed_by.profile.last_name,  "profile_pic": profile_pic, "follow_status": follow_status}
         
     def get_following(self, user):
         return Follower.objects.filter(is_followed_by=user)
@@ -153,10 +167,18 @@ class Message(models.Model):
 
     
     def get_sender(self):
-        return {"id": self.sender.id, "username": self.sender.username}
+        try:
+           profile_pic = self.sender.profile.profile_pic.url
+        except:
+            profile_pic = self.sender.profile.profile_pic
+        return {"id": self.sender.id, "username": self.sender.username, "first_name": self.sender.profile.first_name, "last_name": self.sender.profile.last_name,  "profile_pic": profile_pic}
 
     def get_receiver(self):
-        return {"id": self.receiver.id, "username": self.receiver.username}
+        try:
+           profile_pic = self.receiver.profile.profile_pic.url
+        except:
+            profile_pic = self.receiver.profile.profile_pic
+        return {"id": self.receiver.id, "username": self.receiver.username, "first_name": self.receiver.profile.first_name, "last_name": self.receiver.profile.last_name,  "profile_pic": profile_pic}
 
     def get_unread_count(self):
         return Message.objects.filter(receiver= get_current_authenticated_user(), is_read=False).count()

@@ -36,12 +36,12 @@ class ModuleSerializer(serializers.ModelSerializer):
 
 class CourseChatSerializer(serializers.ModelSerializer):
 
-    username = serializers.CharField(source='author.username', read_only=True)
+    sender = serializers.DictField(child = serializers.CharField(), source = 'get_sender_info', read_only = True)
 
     class Meta:
         
         model = CourseChat
-        fields = ('author', 'username', 'body', 'created')
+        fields = ('sender', 'body', 'created')
 
 
 class SingleCourseSerializer(serializers.ModelSerializer):
