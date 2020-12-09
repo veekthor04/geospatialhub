@@ -13,7 +13,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 paginator = pagination.PageNumberPagination()
-paginator.page_size = 1
+paginator.page_size = 20
 
 class ProfileViewSet(mixins.RetrieveModelMixin, generics.GenericAPIView):
     queryset = Profile.objects.all()
