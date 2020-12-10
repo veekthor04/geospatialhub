@@ -47,7 +47,7 @@ class CourseChatSerializer(serializers.ModelSerializer):
 class SingleCourseSerializer(serializers.ModelSerializer):
 
     modules = ModuleSerializer(many=True, read_only=True)
-    # coursechats = CourseChatSerializer(many=True, read_only=True)
+    author = serializers.DictField(child = serializers.CharField(),source='get_author')
     category = serializers.DictField(child = serializers.CharField(),source='get_category')
     is_user_enrolled = serializers.BooleanField(source='get_is_user_enrolled')
     module_count = serializers.SerializerMethodField()
@@ -64,6 +64,7 @@ class SingleCourseSerializer(serializers.ModelSerializer):
 class FreeSingleCourseSerializer(serializers.ModelSerializer):
 
     modules = serializers.SerializerMethodField('get_free')
+    author = serializers.DictField(child = serializers.CharField(),source='get_author')
     module_count = serializers.SerializerMethodField()
     category = serializers.DictField(child = serializers.CharField(),source='get_category')
     is_user_enrolled = serializers.BooleanField(source='get_is_user_enrolled')
