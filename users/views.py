@@ -11,6 +11,7 @@ from django.db.models import Q
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from datetime import datetime
 
 paginator = pagination.PageNumberPagination()
 paginator.page_size = 20
@@ -419,9 +420,12 @@ def Notification(request):
             'profile_pic': pic,
             'created': follower.created,
         })
+        
+        delta = datetime.now().date() - follower.created.date()     
 
-        follower.is_viewed = True
-        follower.save()  
+        if delta.days >= 1:
+            follower.is_viewed = True
+            follower.save()  
 
 
     return Response({'unread_message_count': unread_count, 'new_follower': new_follower})

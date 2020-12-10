@@ -77,7 +77,8 @@ class ListCourseCategory(generics.ListAPIView):
 class ListEnrolledCourse(generics.ListAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-    filter_backends = (filters.OrderingFilter,)
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    search_fields = ('title', 'overview', 'category__title')
     ordering_fields = ('title', 'created')
 
     def get_queryset(self):
@@ -271,7 +272,7 @@ def Payment(request,pk):
     try:
         callback_url = request.query_params["callback_url"]
     except:
-         callback_url = None
+         return Response(status=status.HTTP_404_NOT_FOUND)
 
     data = {'reference':reference,'amount':amount, 'email':email, 'callback_url': callback_url}
     url = 'https://api.paystack.co/transaction/initialize'
