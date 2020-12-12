@@ -321,6 +321,11 @@ def MyFollowers(request):
 )
 @api_view(['GET'])
 def MessagesList(request):
+
+    try:
+        user_filter = request.query_params["search"]
+    except:
+         return Response(status=status.HTTP_404_NOT_FOUND)
     
     user = request.user
     messages = Message.objects.filter(Q(sender=user) | Q(receiver=user))
@@ -434,11 +439,41 @@ def Notification(request):
 def Test(request):
 
     user = request.user
-    # followers = Follower.objects.filter(is_followed_by=user)
-    # for follower in followers:
+    follower = Follower.objects.filter(user=user, is_viewed=False).exclude(is_followed_by = user)
+    myposts = Post.objects.filter(posted_by=user.id)
+    notification = []
 
-    #     print(follower)
+    for follower in follower:
+        pic = follower.is_followed_by.profile.profile_pic.url
 
-    return Response({})
+        if not pic:
+            pic = None
+
+        notification.append({
+            'event': 'follow',
+            'id': follower.is_followed_by.id,
+            'username': follower.is_followed_by.username,
+            'profile_pic': pic,
+            'created': follower.created,
+        })
+    for post in myposts:
+        pic = post.posted_by.profile.profile_pic.url
+
+        if not pic:
+            pic = None
+
+        notification.append({
+            'event': 'reply',
+            'id': post.posted_by.id,
+            'username': post.posted_by.username,
+            'profile_pic': pic,
+            'created': post.pub_date,
+        })
+
+    sorted(notification, key=notification['created'])
+    
+    print({'notification':notification})
+
+    return Response({'notification':notification})
 
 

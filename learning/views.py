@@ -62,7 +62,6 @@ class ListCourseCategory(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
     queryset = Category.objects.all()
     serializer_class = CourseCategorySerializer
-    pagination.PageNumberPagination.page_size = 10000
 
     @method_decorator(name='list', decorator=swagger_auto_schema(
     operation_description="This shows the list of all course categories on the platform"
