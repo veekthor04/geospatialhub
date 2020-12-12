@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_auth.serializers import TokenSerializer
-from .models import Profile, Post, PostRate, Follower, Message
+from .models import Profile, Post, PostRate, Follower, Message, Notification
 
 
 class ProfileUserSerializer(serializers.ModelSerializer):
@@ -134,4 +134,11 @@ class MessageSerializer(serializers.ModelSerializer):
         write_only_fields = ['text', 'receiver']
 
 
-# class NotificationSerializer()
+class NotificationSerializer(serializers.ModelSerializer):
+
+    course = serializers.DictField(child = serializers.CharField(),source='get_course')
+    follower = serializers.DictField(child=serializers.CharField(), source='get_follower')
+
+    class Meta:
+        model = Notification
+        fields = ('id', 'event', 'follower','course', 'created', 'is_read')

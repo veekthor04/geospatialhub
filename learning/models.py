@@ -31,7 +31,7 @@ class Course(models.Model):
     price = models.PositiveIntegerField(default=0)
     price_before_discount = models.PositiveIntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
-    enrolled_for = models.ManyToManyField(User, related_name='enrolled_for')
+    enrolled_for = models.ManyToManyField(User, related_name='enrolled_for', blank=True)
     
     class Meta:
     

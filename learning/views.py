@@ -2,7 +2,7 @@ from rest_framework import generics, permissions, status, pagination, filters, s
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import Course, Module, CourseChat, Category, Payment as PaymentModel
-from users.models import Profile
+from users.models import Profile, Notification
 from .serializers import CourseSerializer, CourseCategorySerializer, SingleCourseSerializer, FreeSingleCourseSerializer, CourseChatSerializer, CourseChatSerializer
 from django_currentuser.middleware import get_current_authenticated_user
 from random import choice
@@ -142,6 +142,8 @@ def DetailCourseUnenroll(request,pk):
     headers = {'Authorization':secret_key}
 
     course.enrolled_for.remove(user)
+    notification = Notification.objects.get(course=course, user=user)
+    notification.save()
 
     try:
         course_payment = PaymentModel.objects.get( user=user, course=course)
@@ -247,24 +249,6 @@ def Payment(request,pk):
     secret_key = config('PAYSTACK_SECRET_KEY',cast=str)
     headers = {'Authorization':secret_key}
 
-    if request.method == 'POST':
-
-        # reference = request.data['reference']
-        course_payment = PaymentModel.objects.get( user=user, course=course)
-        reference = course_payment.reference
-
-        url = 'https://api.paystack.co/transaction/verify/' + reference
-
-        r = requests.get    (url, headers=headers)
-
-        if r.json()['data']['status'] == 'success':
-            course.enrolled_for.add(user)
-
-            course_payment.completed = True
-            course_payment.save()
-
-        return Response({'status':r.json()['data']['status']})
-
     reference = ''.join([choice(ascii_letters + digits) for n in range(16)])
     amount = course.price * 100
     email = user.email
@@ -331,6 +315,12 @@ def PaymentConfirm(request,pk):
 
         course_payment.completed = True
         course_payment.save()
+
+        try:
+            notification = Notification.objects.get(course=course, user=user)
+            notification.save()
+        except Notification.DoesNotExist:
+            Notification.objects.create(course=course, user=user, event="new_course")        
 
     return Response({'status':r.json()['data']['status']})
     

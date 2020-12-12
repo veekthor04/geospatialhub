@@ -5,8 +5,8 @@ from rest_framework.parsers import JSONParser,FormParser, MultiPartParser
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from .permissions import IsAuthorOrReadOnly, IsPostOwner
-from .serializers import UserSerializer, ProfileSerializer, ListProfileSerializer, ListUserSerializer, PostSerializer, PostRateSerializer, FollowerSerializer, MyFollowerSerializer, MessageSerializer
-from .models import Profile, Post, PostRate, Follower, Message
+from .serializers import UserSerializer, ProfileSerializer, ListProfileSerializer, ListUserSerializer, PostSerializer, PostRateSerializer, FollowerSerializer, MyFollowerSerializer, MessageSerializer, NotificationSerializer
+from .models import Profile, Post, PostRate, Follower, Message, Notification as Notification_model
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
@@ -15,6 +15,17 @@ from datetime import datetime
 
 paginator = pagination.PageNumberPagination()
 paginator.page_size = 20
+
+class CustomPagination(pagination.PageNumberPagination):
+    def get_paginated_response(self, data, unread_message_count):
+        return Response({
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'count': self.page.paginator.count,
+            'unread_message_count': unread_message_count,
+            'results': data
+        })
+
 
 class ProfileViewSet(mixins.RetrieveModelMixin, generics.GenericAPIView):
     queryset = Profile.objects.all()
@@ -402,73 +413,33 @@ def SingleMessage(request,pk):
 def Notification(request):
 
     user = request.user
+    paginator=CustomPagination()
     unread_count = Message.objects.filter(receiver=user, is_read=False).count()
-    follower = Follower.objects.filter(user=user, is_viewed=False).exclude(is_followed_by = user)
-    new_follower = []
+    queryset = Notification_model.objects.filter(user=user)
+    queryset_page = paginator.paginate_queryset(queryset, request)
+    serializer = NotificationSerializer(queryset_page, many=True)
+    return paginator.get_paginated_response(serializer.data,unread_count)  
 
-    for follower in follower:
-        pic = follower.is_followed_by.profile.profile_pic
-
-        if not pic:
-            pic = None
-
-        new_follower.append({
-            'id': follower.is_followed_by.id,
-            'username': follower.is_followed_by.username,
-            'first_name': follower.is_followed_by.first_name,
-            'last_name': follower.is_followed_by.last_name,
-            'profile_pic': pic,
-            'created': follower.created,
-        })
-        
-        delta = datetime.now().date() - follower.created.date()     
-
-        if delta.days >= 1:
-            follower.is_viewed = True
-            follower.save()  
-
-
-    return Response({'unread_message_count': unread_count, 'new_follower': new_follower})
 
 @api_view(['GET'])
 def Test(request):
 
     user = request.user
-    follower = Follower.objects.filter(user=user, is_viewed=False).exclude(is_followed_by = user)
-    myposts = Post.objects.filter(posted_by=user.id)
-    notification = []
+    # notifications = Notification_model.objects.filter(user=user)
+    # notification_list = []
 
-    for follower in follower:
-        pic = follower.is_followed_by.profile.profile_pic.url
+    # for notification in notifications:
 
-        if not pic:
-            pic = None
+    #     notification_list.append({
+    #         'id': notification.id,
+    #         'event': notification.event,
+    #         'follower': notification.get_follower(),
+    #         'course': notification.get_course(),
+    #         'created': notification.created,
+    #         'is_read': notification.is_read
+    #     })
 
-        notification.append({
-            'event': 'follow',
-            'id': follower.is_followed_by.id,
-            'username': follower.is_followed_by.username,
-            'profile_pic': pic,
-            'created': follower.created,
-        })
-    for post in myposts:
-        pic = post.posted_by.profile.profile_pic.url
-
-        if not pic:
-            pic = None
-
-        notification.append({
-            'event': 'reply',
-            'id': post.posted_by.id,
-            'username': post.posted_by.username,
-            'profile_pic': pic,
-            'created': post.pub_date,
-        })
-
-    sorted(notification, key=notification['created'])
+    return Response({})
     
-    print({'notification':notification})
-
-    return Response({'notification':notification})
 
 

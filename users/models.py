@@ -157,10 +157,10 @@ class Follower(models.Model):
     def __str__(self):
         return self.is_followed_by
 
-# @receiver(post_save, sender=Follower)
-# def new_follower(sender, instance, created, **kwargs):
-#     if created:
-#         Notification.objects.create(follower=instance, user=instance.user,event="new_follower")
+@receiver(post_save, sender=Follower)
+def new_follower(sender, instance, created, **kwargs):
+    if created:
+        Notification.objects.create(follower=instance, user=instance.user,event="new_follower")
 
 
 class Message(models.Model):
@@ -195,9 +195,29 @@ class Message(models.Model):
         return self.id
 
 
-# class Notification(models.Model):
-#     event = models.CharField(max_length=20, blank=True)
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_notification')
-#     follower = models.ForeignKey(Follower, on_delete=models.CASCADE, related_name='follower', null=True, default=None)
-#     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='receiver_course', null=True, default=None)
-#     created = models.DateTimeField(auto_now_add=True)
+class Notification(models.Model):
+    event = models.CharField(max_length=20, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_notification')
+    follower = models.ForeignKey(Follower, on_delete=models.CASCADE, related_name='follower', null=True, default=None)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='receiver_course', null=True, default=None)
+    is_read = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now=True)
+
+    def get_follower(self):
+        if self.follower:
+            try:
+                profile_pic = self.follower.is_followed_by.profile.profile_pic.url
+            except:
+                profile_pic = None
+            return {"id": self.follower.is_followed_by.id, "username": self.follower.is_followed_by.username, "first_name": self.follower.is_followed_by.profile.first_name, "last_name": self.follower.is_followed_by.profile.last_name,  "profile_pic": profile_pic}
+        else:
+            return None
+    
+    def get_course(self):
+        if self.course:
+            return {'id': self.course.id,'title': self.course.title, 'enrolled_status': self.course.enrolled_for.filter(id=get_current_authenticated_user().pk).exists()}
+        else:
+            return None
+      
+    class Meta:
+        ordering = ['-created']
