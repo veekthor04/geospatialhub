@@ -321,11 +321,6 @@ def MyFollowers(request):
 )
 @api_view(['GET'])
 def MessagesList(request):
-
-    try:
-        user_filter = request.query_params["search"]
-    except:
-         return Response(status=status.HTTP_404_NOT_FOUND)
     
     user = request.user
     messages = Message.objects.filter(Q(sender=user) | Q(receiver=user))
