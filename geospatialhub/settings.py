@@ -263,7 +263,7 @@ STATIC_URL = '/static/'
 
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-SITE_ID = 2
+SITE_ID = 1
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
