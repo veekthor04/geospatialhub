@@ -220,4 +220,4 @@ class Notification(models.Model):
             return None
       
     class Meta:
-        ordering = ['-created']
+        ordering = ['is_read', '-created']

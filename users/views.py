@@ -17,12 +17,13 @@ paginator = pagination.PageNumberPagination()
 paginator.page_size = 20
 
 class CustomPagination(pagination.PageNumberPagination):
-    def get_paginated_response(self, data, unread_message_count):
+    def get_paginated_response(self, data, unread_message_count, unread_notifications_count):
         return Response({
             'next': self.get_next_link(),
             'previous': self.get_previous_link(),
             'count': self.page.paginator.count,
             'unread_message_count': unread_message_count,
+            'unread_notifications_count':unread_notifications_count,
             'results': data
         })
 
@@ -409,16 +410,22 @@ def SingleMessage(request,pk):
     )},
     operation_description="This displays the number of unread messages and new followers"
 )
-@api_view(['GET'])
+@api_view(['GET','POST'])
 def Notification(request):
 
     user = request.user
+    notifications = Notification_model.objects.filter(user=user)
+    
+    if request.method == 'POST':
+        notification = notifications.get(pk=request.data['notification_id'])
+        notification.is_read = True
+        notification.save()
+    unread_notifications_count = notifications.filter(is_read=False).count()
     paginator=CustomPagination()
     unread_count = Message.objects.filter(receiver=user, is_read=False).count()
-    queryset = Notification_model.objects.filter(user=user)
-    queryset_page = paginator.paginate_queryset(queryset, request)
+    queryset_page = paginator.paginate_queryset(notifications, request)
     serializer = NotificationSerializer(queryset_page, many=True)
-    return paginator.get_paginated_response(serializer.data,unread_count)  
+    return paginator.get_paginated_response(serializer.data,unread_count,unread_notifications_count)  
 
 
 @api_view(['GET'])
