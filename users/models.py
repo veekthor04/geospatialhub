@@ -215,7 +215,7 @@ class Notification(models.Model):
     
     def get_course(self):
         if self.course:
-            return {'id': self.course.id,'title': self.course.title, 'enrolled_status': self.course.enrolled_for.filter(id=get_current_authenticated_user().pk).exists()}
+            return {'id': self.course.id,'title': self.course.title}
         else:
             return None
       

@@ -142,8 +142,8 @@ def DetailCourseUnenroll(request,pk):
     headers = {'Authorization':secret_key}
 
     course.enrolled_for.remove(user)
-    notification = Notification.objects.get(course=course, user=user)
-    notification.save()
+    
+    Notification.objects.create(course=course, user=user, event="unenroll_course")
 
     try:
         course_payment = PaymentModel.objects.get( user=user, course=course)
@@ -252,12 +252,17 @@ def Payment(request,pk):
     reference = ''.join([choice(ascii_letters + digits) for n in range(16)])
     amount = course.price * 100
     email = user.email
+    
     try:
         callback_url = request.query_params["callback_url"]
     except:
          return Response(status=status.HTTP_404_NOT_FOUND)
 
+    # currency = 'USD'
+    # data = {'reference':reference,'amount':amount, 'email':email, 'currency':currency, 'callback_url': callback_url}
+
     data = {'reference':reference,'amount':amount, 'email':email, 'callback_url': callback_url}
+
     url = 'https://api.paystack.co/transaction/initialize'
 
     if not PaymentModel.objects.filter(user=user, course=course).exists():
@@ -315,12 +320,8 @@ def PaymentConfirm(request,pk):
 
         course_payment.completed = True
         course_payment.save()
-
-        try:
-            notification = Notification.objects.get(course=course, user=user)
-            notification.save()
-        except Notification.DoesNotExist:
-            Notification.objects.create(course=course, user=user, event="new_course")        
+    
+        Notification.objects.create(course=course, user=user, event="new_course")        
 
     return Response({'status':r.json()['data']['status']})
     
