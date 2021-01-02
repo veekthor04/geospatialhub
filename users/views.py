@@ -405,7 +405,7 @@ def SingleMessage(request,pk):
         type=openapi.TYPE_OBJECT,
         properties={
             'unread_message_count': openapi.Schema(type=openapi.TYPE_INTEGER),
-            'new_follower': openapi.Schema(type=openapi.TYPE_INTEGER)
+            'unread_notifications_count': openapi.Schema(type=openapi.TYPE_INTEGER)
         }
     )},
     operation_description="This displays the number of unread messages and new followers"
@@ -427,26 +427,6 @@ def Notification(request):
     serializer = NotificationSerializer(queryset_page, many=True)
     return paginator.get_paginated_response(serializer.data,unread_count,unread_notifications_count)  
 
-
-@api_view(['GET'])
-def Test(request):
-
-    user = request.user
-    # notifications = Notification_model.objects.filter(user=user)
-    # notification_list = []
-
-    # for notification in notifications:
-
-    #     notification_list.append({
-    #         'id': notification.id,
-    #         'event': notification.event,
-    #         'follower': notification.get_follower(),
-    #         'course': notification.get_course(),
-    #         'created': notification.created,
-    #         'is_read': notification.is_read
-    #     })
-
-    return Response({})
     
 
 

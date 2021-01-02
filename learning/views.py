@@ -18,27 +18,6 @@ paginator = pagination.PageNumberPagination()
 paginator.page_size = 20
 
 # Create your views here.
-# @method_decorator(name='list', decorator=swagger_auto_schema(
-#     operation_description="This displays the list of all users on the platform"
-# ))
-# class ListCourse(generics.ListAPIView):
-#     permission_classes = (permissions.AllowAny,)
-#     queryset = Course.objects.all()
-#     serializer_class = CourseSerializer
-
-#     def list(self, request, *args, **kwargs):
-#         queryset = self.filter_queryset(self.get_queryset())
-#         serializer = self.get_serializer(queryset, many=True)
-#         response_list = serializer.data 
-
-#         category_list =  Category.objects.all()
-
-#         all_categories = []
-#         for category in category_list:
-#             all_categories.append({"id": category.id, "title": category.title})
-
-#         data = { 'courses' : response_list, 'categories' : all_categories }
-#         return Response(data=data)
 
 class ListCourse(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
@@ -69,6 +48,7 @@ class ListCourseCategory(generics.ListAPIView):
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         queryset_page = paginator.paginate_queryset(queryset, request)
+        paginator.page_size = 1000000
         serializer = self.get_serializer(queryset_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
